@@ -16,6 +16,7 @@ import {
   GraduationCap,
   Shield,
   MoreVertical,
+  Phone,
 } from "lucide-react";
 
 /**
