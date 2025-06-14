@@ -6,6 +6,8 @@ import { Route, Routes } from "react-router-dom";
 import Dashboard from "./pages/Admin/Dashboard";
 import UserManagement from "./pages/Admin/UserManagement";
 import Layout from "./components/Layout";
+import PrivateRoute from "./components/PrivateRoute";
+import EventManagement from "./pages/Admin/EventManagement";
 
 function App() {
   const [appUsers, setAppUsers] = useState([]); // Initialize with an empty array or fetch data
@@ -15,31 +17,43 @@ function App() {
     // In a real app, you'd also persist this to an API/database
   };
   return (
-    <>
-      <Routes>
-        <Route path="/" element={<Login />}></Route>
-        <Route
-          path="/dashboard"
-          element={
+    <Routes>
+      {/* Public route */}
+      <Route path="/" element={<Login />} />
+
+      {/* Private routes */}
+      <Route
+        path="/dashboard"
+        element={
+          <PrivateRoute>
             <Layout currentPageTitle="Admin Dashboard">
-              {/* This is the content that was originally in your Dashboard component's main tag */}
               <Dashboard />
             </Layout>
-          }
-        />
-        <Route
-          path="/user"
-          element={
+          </PrivateRoute>
+        }
+      />
+      <Route path="/events" element={
+        <PrivateRoute>
+          <Layout currentPageTitle="Event Management">
+            <EventManagement/>
+          </Layout>
+        </PrivateRoute>
+      }></Route>
+
+      <Route
+        path="/user"
+        element={
+          <PrivateRoute>
             <Layout currentPageTitle="User Management">
               <UserManagement
                 users={appUsers}
                 onUserUpdate={handleUserUpdate}
               />
             </Layout>
-          }
-        />
-      </Routes>
-    </>
+          </PrivateRoute>
+        }
+      />
+    </Routes>
   );
 }
 

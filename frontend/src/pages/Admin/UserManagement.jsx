@@ -1,6 +1,6 @@
 // src/components/UserManagement.jsx
 import React, { useState, useEffect } from "react";
-import toast, { Toaster } from "react-hot-toast"; // Import toast and Toaster
+import toast, { Toaster } from "react-hot-toast";
 import {
   Users,
   Plus,
@@ -71,6 +71,26 @@ const UserManagement = ({ users: initialUsers, onUserUpdate }) => {
   });
 
   const token = localStorage.getItem("token");
+  // State to hold the ID of the logged-in user
+  const [loggedInUserId, setLoggedInUserId] = useState(null);
+
+  // Effect to extract loggedInUserId from token when component mounts or token changes
+  useEffect(() => {
+    if (token) {
+      try {
+        // Basic JWT decoding - consider a library like 'jwt-decode' for production
+        const payload = JSON.parse(atob(token.split(".")[1]));
+        setLoggedInUserId(payload._id || payload.id); // Use _id or id based on your token structure
+      } catch (e) {
+        console.error("Error decoding token:", e);
+        // Handle invalid token scenario, e.g., redirect to login
+        setLoggedInUserId(null); // Clear ID if token is invalid
+      }
+    } else {
+      setLoggedInUserId(null); // Clear ID if no token
+    }
+    fetchUsers(); // Fetch users when token/loggedInUserId might have changed
+  }, [token]); // Re-run when 'token' changes
 
   const fetchUsers = async () => {
     try {
@@ -100,11 +120,11 @@ const UserManagement = ({ users: initialUsers, onUserUpdate }) => {
     }
   };
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
   const isIdTaken = (id, type) => {
+    // Check against existing users in the list AND the logged-in user's ID
+    if (loggedInUserId && id === loggedInUserId) {
+      return true; // The generated ID clashes with the logged-in user's primary ID
+    }
     if (type === "student") {
       return users.some((user) => user.studentId === id);
     } else if (type === "faculty") {
@@ -196,6 +216,11 @@ const UserManagement = ({ users: initialUsers, onUserUpdate }) => {
 
   const filteredUsers = users
     .filter((user) => {
+      // Exclude the currently logged-in user
+      if (loggedInUserId && user._id === loggedInUserId) {
+        return false;
+      }
+
       const userName = user.name || "";
       const userEmail = user.email || "";
       const userStudentId = user.studentId || "";
@@ -294,7 +319,6 @@ const UserManagement = ({ users: initialUsers, onUserUpdate }) => {
 
     try {
       const res = await toast.promise(
-        // Using toast.promise for API call feedback
         fetch("http://localhost:5000/api/auth/register", {
           method: "POST",
           headers: {
@@ -307,7 +331,7 @@ const UserManagement = ({ users: initialUsers, onUserUpdate }) => {
           loading: "Creating user...",
           success: (response) => {
             if (!response.ok) {
-              throw new Error(response.statusText); // Throw to trigger error toast
+              throw new Error(response.statusText);
             }
             return "User created successfully!";
           },
@@ -334,7 +358,7 @@ const UserManagement = ({ users: initialUsers, onUserUpdate }) => {
         setShowCreateModal(false);
       } else {
         const errorData = await res.json();
-        console.error("Failed to create user:", errorData.message); // Log full error
+        console.error("Failed to create user:", errorData.message);
       }
     } catch (error) {
       console.error("Error during user creation:", error);
@@ -353,7 +377,6 @@ const UserManagement = ({ users: initialUsers, onUserUpdate }) => {
 
     try {
       const res = await toast.promise(
-        // Using toast.promise
         fetch(`http://localhost:5000/api/users/${selectedUser._id}`, {
           method: "PUT",
           headers: {
@@ -395,10 +418,8 @@ const UserManagement = ({ users: initialUsers, onUserUpdate }) => {
 
   const handleDeleteUser = async (userId) => {
     if (window.confirm("Are you sure you want to delete this user?")) {
-      // Confirmation still with alert/confirm
       try {
         const res = await toast.promise(
-          // Using toast.promise
           fetch(`http://localhost:5000/api/users/${userId}`, {
             method: "DELETE",
             headers: {
@@ -435,7 +456,7 @@ const UserManagement = ({ users: initialUsers, onUserUpdate }) => {
   const handleToggleStatus = async (userId) => {
     const userToToggle = users.find((user) => user._id === userId);
     if (!userToToggle) {
-      toast.error(`User with ID ${userId} not found.`); // Toast for internal warning
+      toast.error(`User with ID ${userId} not found.`);
       console.warn(`User with ID ${userId} not found for status toggle.`);
       return;
     }
@@ -444,7 +465,6 @@ const UserManagement = ({ users: initialUsers, onUserUpdate }) => {
 
     try {
       const res = await toast.promise(
-        // Using toast.promise
         fetch(`http://localhost:5000/api/users/${userId}/toggle-status`, {
           method: "PATCH",
           headers: {
@@ -525,7 +545,6 @@ const UserManagement = ({ users: initialUsers, onUserUpdate }) => {
   return (
     <div className="space-y-6">
       <Toaster position="top-right" reverseOrder={false} />{" "}
-      {/* Toaster component */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-white">User Management</h1>
