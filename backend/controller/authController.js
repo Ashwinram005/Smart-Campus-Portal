@@ -9,24 +9,8 @@ const generateToken = (user) => {
 };
 
 exports.register = async (req, res) => {
-  const {
-    name,
-    email,
-    password,
-    role,
-    department,
-    year,
-    phone,
-    studentId,
-    facultyId,
-  } = req.body;
-
   try {
-    const userExists = await User.findOne({ email });
-    if (userExists)
-      return res.status(400).json({ message: "User already exists" });
-
-    const newUser = await User.create({
+    const {
       name,
       email,
       password,
@@ -36,7 +20,33 @@ exports.register = async (req, res) => {
       phone,
       studentId,
       facultyId,
-    });
+    } = req.body;
+
+    const userExists = await User.findOne({ email });
+    if (userExists)
+      return res.status(400).json({ message: "User already exists" });
+
+    const userData = {
+      name,
+      email,
+      password,
+      role,
+      phone,
+    };
+
+    // Role-based fields
+    if (role === "student") {
+      userData.department = department;
+      userData.year = year;
+      userData.studentId = studentId;
+    }
+
+    if (role === "faculty") {
+      userData.department = department;
+      userData.facultyId = facultyId;
+    }
+
+    const newUser = await User.create(userData);
     res.status(201).json({ user: newUser });
   } catch (err) {
     res

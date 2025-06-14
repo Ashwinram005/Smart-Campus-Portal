@@ -16,9 +16,8 @@ const userSchema = new mongoose.Schema({
 
   department: {
     type: String,
-    required: function () {
-      return this.role === 'student' || this.role === 'faculty';
-    },
+    required: true
+    
   },
 
   year: {
