@@ -1,28 +1,37 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const { protect, authorizeRoles } = require('../middlware/authMiddleware');
-const { createAnnouncement, getAllAnnouncements, getUserRelevantAnnouncements } = require('../controller/announcementController');
+const { protect, authorizeRoles } = require("../middlware/authMiddleware");
+const {
+  createAnnouncement,
+  getAllAnnouncements,
+  getUserRelevantAnnouncements,
+  updateAnnouncement,
+  deleteAnnouncement,
+} = require("../controller/announcementController");
 
 // 🔒 Only Admin and Faculty can create announcements
 router.post(
-  '/',
+  "/",
   protect,
-  authorizeRoles('admin', 'faculty'),
+  authorizeRoles("admin", "faculty"),
   createAnnouncement
 );
 
-router.get(
-  '/',
+router.get("/", protect, authorizeRoles("admin"), getAllAnnouncements);
+
+router.get("/feed", protect, getUserRelevantAnnouncements);
+
+router.put(
+  "/:id",
   protect,
-  authorizeRoles('admin'),
-  getAllAnnouncements
+  authorizeRoles("admin", "faculty"),
+  updateAnnouncement
 );
 
-
-router.get(
-  '/feed',
+router.delete(
+  "/:id",
   protect,
-  getUserRelevantAnnouncements
+  authorizeRoles("admin", "faculty"),
+  deleteAnnouncement
 );
-
 module.exports = router;
