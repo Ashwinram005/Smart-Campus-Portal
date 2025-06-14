@@ -75,8 +75,8 @@ export default function Login() {
         const data = await response.json();
 
         if (response.ok) {
-          localStorage.setItem("access_token", data.access_token);
-          localStorage.setItem("refresh_token", data.refresh_token);
+          localStorage.setItem("token", data.token);
+         
           navigate("/dashboard");
         } else {
           setError(
