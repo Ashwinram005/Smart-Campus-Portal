@@ -435,7 +435,7 @@ const EventManagement = () => {
         {/* "My Announcements" Button - always visible */}
         <button
           onClick={() => {
-            if (!token || !userId) {
+            if (!token ) {
               toast.error("Please log in to view your announcements.");
               return;
             }
