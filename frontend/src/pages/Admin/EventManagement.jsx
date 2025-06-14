@@ -384,14 +384,14 @@ const EventManagement = () => {
   return (
     <div className="p-6 space-y-6 bg-gray-50 min-h-screen">
       <Toaster position="top-right" />
-      <div className="flex flex-col md:flex-row md:items-center justify-between pb-4 border-b border-gray-200 gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between  pb-4 border-b border-gray-200 gap-4">
         <div>
           <h1 className="text-3xl font-extrabold text-gray-900">
             Campus Announcements
           </h1>
-          <p className="text-gray-600 mt-2 text-lg">
+          {/* <p className="text-gray-600 mt-2 text-lg">
             Stay updated with the latest campus news and activities.
-          </p>
+          </p> */}
         </div>
         {(userRole === "admin" || userRole === "faculty") && (
           <button
@@ -435,7 +435,7 @@ const EventManagement = () => {
         {/* "My Announcements" Button - always visible */}
         <button
           onClick={() => {
-            if (!token ) {
+            if (!token) {
               toast.error("Please log in to view your announcements.");
               return;
             }
@@ -582,7 +582,7 @@ const EventManagement = () => {
                       <div className="flex items-center">
                         <Users className="w-4 h-4 mr-3 text-orange-600" />
                         <span>
-                          Organized by{" "}
+                          Posted by{" "}
                           {announcement.organizer || announcement.createdByRole}
                         </span>
                       </div>
