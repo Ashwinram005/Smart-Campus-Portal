@@ -231,3 +231,23 @@ exports.deleteAnnouncement = async (req, res) => {
       .json({ message: "Failed to delete announcement", error: err.message });
   }
 };
+
+exports.getMyAnnouncements = async (req, res) => {
+  try {
+    // Only admin and faculty reach here due to route protection
+    const userId = req.user._id;
+    const role = req.user.role; // 'admin' or 'faculty'
+
+    const myPosts = await Announcement.find({
+      createdBy: userId,
+      createdByRole: role,
+    }).sort({ createdAt: -1 });
+
+    res.status(200).json(myPosts);
+  } catch (err) {
+    res.status(500).json({
+      message: "Failed to fetch your announcements",
+      error: err.message,
+    });
+  }
+};

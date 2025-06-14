@@ -7,6 +7,7 @@ const {
   getUserRelevantAnnouncements,
   updateAnnouncement,
   deleteAnnouncement,
+  getMyAnnouncements,
 } = require("../controller/announcementController");
 
 // 🔒 Only Admin and Faculty can create announcements
@@ -34,4 +35,12 @@ router.delete(
   authorizeRoles("admin", "faculty"),
   deleteAnnouncement
 );
+
+router.get(
+  "/my",
+  protect,
+  authorizeRoles("admin", "faculty"),
+  getMyAnnouncements
+);
+
 module.exports = router;
