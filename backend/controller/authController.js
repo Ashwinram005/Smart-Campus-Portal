@@ -9,7 +9,17 @@ const generateToken = (user) => {
 };
 
 exports.register = async (req, res) => {
-  const { name, email, password, role, department, year } = req.body;
+  const {
+    name,
+    email,
+    password,
+    role,
+    department,
+    year,
+    phone,
+    studentId,
+    facultyId,
+  } = req.body;
 
   try {
     const userExists = await User.findOne({ email });
@@ -23,6 +33,9 @@ exports.register = async (req, res) => {
       role,
       department,
       year,
+      phone,
+      studentId,
+      facultyId,
     });
     res.status(201).json({ user: newUser });
   } catch (err) {
