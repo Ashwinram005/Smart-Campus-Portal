@@ -1,5 +1,6 @@
 // src/components/UserManagement.jsx
 import React, { useState, useEffect } from "react";
+import toast, { Toaster } from "react-hot-toast";
 import {
   Users,
   Plus,
@@ -54,12 +55,14 @@ const UserManagement = ({ users: initialUsers, onUserUpdate }) => {
   const [sortBy, setSortBy] = useState("name");
   const [sortOrder, setSortOrder] = useState("asc");
 
+  const getCurrentYear = () => new Date().getFullYear().toString();
+
   const [newUser, setNewUser] = useState({
     name: "",
     email: "",
     role: "student",
     department: "",
-    year: "",
+    year: getCurrentYear(),
     studentId: "",
     facultyId: "",
     phone: "",
@@ -68,6 +71,26 @@ const UserManagement = ({ users: initialUsers, onUserUpdate }) => {
   });
 
   const token = localStorage.getItem("token");
+  // State to hold the ID of the logged-in user
+  const [loggedInUserId, setLoggedInUserId] = useState(null);
+
+  // Effect to extract loggedInUserId from token when component mounts or token changes
+  useEffect(() => {
+    if (token) {
+      try {
+        // Basic JWT decoding - consider a library like 'jwt-decode' for production
+        const payload = JSON.parse(atob(token.split(".")[1]));
+        setLoggedInUserId(payload._id || payload.id); // Use _id or id based on your token structure
+      } catch (e) {
+        console.error("Error decoding token:", e);
+        // Handle invalid token scenario, e.g., redirect to login
+        setLoggedInUserId(null); // Clear ID if token is invalid
+      }
+    } else {
+      setLoggedInUserId(null); // Clear ID if no token
+    }
+    fetchUsers(); // Fetch users when token/loggedInUserId might have changed
+  }, [token]); // Re-run when 'token' changes
 
   const fetchUsers = async () => {
     try {
@@ -82,18 +105,26 @@ const UserManagement = ({ users: initialUsers, onUserUpdate }) => {
         const data = await response.json();
         setUsers(data.users);
       } else {
-        console.error("Failed to fetch users:", response.statusText);
+        const errorData = await response.json();
+        toast.error(
+          `Failed to fetch users: ${errorData.message || response.statusText}`
+        );
+        console.error(
+          "Failed to fetch users:",
+          errorData.message || response.statusText
+        );
       }
     } catch (error) {
+      toast.error(`Error fetching users: ${error.message}`);
       console.error("Error fetching users:", error);
     }
   };
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
   const isIdTaken = (id, type) => {
+    // Check against existing users in the list AND the logged-in user's ID
+    if (loggedInUserId && id === loggedInUserId) {
+      return true; // The generated ID clashes with the logged-in user's primary ID
+    }
     if (type === "student") {
       return users.some((user) => user.studentId === id);
     } else if (type === "faculty") {
@@ -105,7 +136,7 @@ const UserManagement = ({ users: initialUsers, onUserUpdate }) => {
   const generateStudentId = () => {
     const { department, year } = newUser;
     if (!department || !year) {
-      alert("Please enter Department and Year to generate Student ID.");
+      toast.error("Please enter Department and Year to generate Student ID.");
       return;
     }
 
@@ -120,7 +151,7 @@ const UserManagement = ({ users: initialUsers, onUserUpdate }) => {
       generatedId = `${departmentCode}-${yearLastTwoDigits}-${randomRollNo}`;
       attempts++;
       if (attempts > MAX_ATTEMPTS) {
-        alert(
+        toast.error(
           "Could not generate a unique Student ID after several attempts. Please try again or adjust input."
         );
         return;
@@ -128,12 +159,13 @@ const UserManagement = ({ users: initialUsers, onUserUpdate }) => {
     } while (isIdTaken(generatedId, "student"));
 
     setNewUser((prev) => ({ ...prev, studentId: generatedId }));
+    toast.success("Student ID generated!");
   };
 
   const generateFacultyId = () => {
     const { department } = newUser;
     if (!department) {
-      alert("Please enter Department to generate Faculty ID.");
+      toast.error("Please enter Department to generate Faculty ID.");
       return;
     }
 
@@ -147,7 +179,7 @@ const UserManagement = ({ users: initialUsers, onUserUpdate }) => {
       generatedId = `${departmentCode}-FAC-${randomFacultyNum}`;
       attempts++;
       if (attempts > MAX_ATTEMPTS) {
-        alert(
+        toast.error(
           "Could not generate a unique Faculty ID after several attempts. Please try again or adjust input."
         );
         return;
@@ -155,12 +187,40 @@ const UserManagement = ({ users: initialUsers, onUserUpdate }) => {
     } while (isIdTaken(generatedId, "faculty"));
 
     setNewUser((prev) => ({ ...prev, facultyId: generatedId }));
+    toast.success("Faculty ID generated!");
+  };
+
+  const getAcademicYearDisplay = (admissionYear) => {
+    if (!admissionYear) return "N/A";
+    const currentYear = new Date().getFullYear();
+    const admittedYear = parseInt(admissionYear, 10);
+    if (isNaN(admittedYear)) return "N/A";
+
+    const academicYear = currentYear - admittedYear + 1;
+
+    switch (academicYear) {
+      case 1:
+        return "I Year";
+      case 2:
+        return "II Year";
+      case 3:
+        return "III Year";
+      case 4:
+        return "IV Year";
+      case 5:
+        return "V Year";
+      default:
+        return academicYear > 0 ? `${academicYear} Year` : "Graduated";
+    }
   };
 
   const filteredUsers = users
     .filter((user) => {
-      // FIX: Ensure user properties are strings before calling toLowerCase()
-      // Use logical OR (||) with an empty string fallback
+      // Exclude the currently logged-in user
+      if (loggedInUserId && user._id === loggedInUserId) {
+        return false;
+      }
+
       const userName = user.name || "";
       const userEmail = user.email || "";
       const userStudentId = user.studentId || "";
@@ -203,7 +263,6 @@ const UserManagement = ({ users: initialUsers, onUserUpdate }) => {
           break;
       }
 
-      // Ensure values are not null before localeCompare, or provide default
       const compareA =
         aValue !== null && typeof aValue === "string" ? aValue : "";
       const compareB =
@@ -220,11 +279,11 @@ const UserManagement = ({ users: initialUsers, onUserUpdate }) => {
     e.preventDefault();
 
     if (newUser.role === "student" && !newUser.studentId) {
-      alert("Please generate a Student ID.");
+      toast.error("Please generate a Student ID.");
       return;
     }
     if (newUser.role === "faculty" && !newUser.facultyId) {
-      alert("Please generate a Faculty ID.");
+      toast.error("Please generate a Faculty ID.");
       return;
     }
 
@@ -236,7 +295,7 @@ const UserManagement = ({ users: initialUsers, onUserUpdate }) => {
     } else if (newUser.role === "admin") {
       passwordToUse = prompt("Enter initial password for admin:") || "";
       if (!passwordToUse) {
-        alert("Admin password is required.");
+        toast.error("Admin password is required.");
         return;
       }
     }
@@ -259,27 +318,37 @@ const UserManagement = ({ users: initialUsers, onUserUpdate }) => {
     }
 
     try {
-      const response = await fetch("http://localhost:5000/api/auth/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(userToCreate),
-      });
+      const res = await toast.promise(
+        fetch("http://localhost:5000/api/auth/register", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(userToCreate),
+        }),
+        {
+          loading: "Creating user...",
+          success: (response) => {
+            if (!response.ok) {
+              throw new Error(response.statusText);
+            }
+            return "User created successfully!";
+          },
+          error: (error) =>
+            `Failed to create user: ${error.message || "Unknown error"}`,
+        }
+      );
 
-      if (response.ok) {
-        const createdUser = await response.json();
-        alert(
-          `User "${createdUser.name}" created successfully! Initial password for ${createdUser.role} is their ID.`
-        );
+      if (res.ok) {
+        const createdUser = await res.json();
         setUsers((prevUsers) => [...prevUsers, createdUser]);
         setNewUser({
           name: "",
           email: "",
           role: "student",
           department: "",
-          year: "",
+          year: getCurrentYear(),
           studentId: "",
           facultyId: "",
           phone: "",
@@ -288,18 +357,11 @@ const UserManagement = ({ users: initialUsers, onUserUpdate }) => {
         });
         setShowCreateModal(false);
       } else {
-        const errorData = await response.json();
-        console.error(
-          "Failed to create user:",
-          errorData.message || response.statusText
-        );
-        alert(
-          `Failed to create user: ${errorData.message || response.statusText}`
-        );
+        const errorData = await res.json();
+        console.error("Failed to create user:", errorData.message);
       }
     } catch (error) {
       console.error("Error during user creation:", error);
-      alert(`Error creating user: ${error.message}`);
     }
   };
 
@@ -314,20 +376,30 @@ const UserManagement = ({ users: initialUsers, onUserUpdate }) => {
     };
 
     try {
-      const response = await fetch(
-        `http://localhost:5000/api/users/${selectedUser._id}`,
-        {
+      const res = await toast.promise(
+        fetch(`http://localhost:5000/api/users/${selectedUser._id}`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify(userToUpdate),
+        }),
+        {
+          loading: "Updating user...",
+          success: (response) => {
+            if (!response.ok) {
+              throw new Error(response.statusText);
+            }
+            return "User updated successfully!";
+          },
+          error: (error) =>
+            `Failed to update user: ${error.message || "Unknown error"}`,
         }
       );
 
-      if (response.ok) {
-        const updatedUser = await response.json();
+      if (res.ok) {
+        const updatedUser = await res.json();
         setUsers((prevUsers) =>
           prevUsers.map((user) =>
             user._id === updatedUser._id ? updatedUser : user
@@ -336,52 +408,47 @@ const UserManagement = ({ users: initialUsers, onUserUpdate }) => {
         setShowEditModal(false);
         setSelectedUser(null);
       } else {
-        const errorData = await response.json();
-        console.error(
-          "Failed to update user:",
-          errorData.message || response.statusText
-        );
-        alert(
-          `Failed to update user: ${errorData.message || response.statusText}`
-        );
+        const errorData = await res.json();
+        console.error("Failed to update user:", errorData.message);
       }
     } catch (error) {
       console.error("Error during user update:", error);
-      alert(`Error updating user: ${error.message}`);
     }
   };
 
   const handleDeleteUser = async (userId) => {
     if (window.confirm("Are you sure you want to delete this user?")) {
       try {
-        const response = await fetch(
-          `http://localhost:5000/api/users/${userId}`,
-          {
+        const res = await toast.promise(
+          fetch(`http://localhost:5000/api/users/${userId}`, {
             method: "DELETE",
             headers: {
               Authorization: `Bearer ${token}`,
             },
+          }),
+          {
+            loading: "Deleting user...",
+            success: (response) => {
+              if (!response.ok) {
+                throw new Error(response.statusText);
+              }
+              return "User deleted successfully!";
+            },
+            error: (error) =>
+              `Failed to delete user: ${error.message || "Unknown error"}`,
           }
         );
 
-        if (response.ok) {
-          alert("User deleted successfully!");
+        if (res.ok) {
           setUsers((prevUsers) =>
             prevUsers.filter((user) => user._id !== userId)
           );
         } else {
-          const errorData = await response.json();
-          console.error(
-            "Failed to delete user:",
-            errorData.message || response.statusText
-          );
-          alert(
-            `Failed to delete user: ${errorData.message || response.statusText}`
-          );
+          const errorData = await res.json();
+          console.error("Failed to delete user:", errorData.message);
         }
       } catch (error) {
         console.error("Error during user deletion:", error);
-        alert(`Error deleting user: ${error.message}`);
       }
     }
   };
@@ -389,6 +456,7 @@ const UserManagement = ({ users: initialUsers, onUserUpdate }) => {
   const handleToggleStatus = async (userId) => {
     const userToToggle = users.find((user) => user._id === userId);
     if (!userToToggle) {
+      toast.error(`User with ID ${userId} not found.`);
       console.warn(`User with ID ${userId} not found for status toggle.`);
       return;
     }
@@ -396,40 +464,40 @@ const UserManagement = ({ users: initialUsers, onUserUpdate }) => {
     const newStatus = userToToggle.status === "active" ? "inactive" : "active";
 
     try {
-      const response = await fetch(
-        `http://localhost:5000/api/users/${userId}/toggle-status`,
-        {
+      const res = await toast.promise(
+        fetch(`http://localhost:5000/api/users/${userId}/toggle-status`, {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({ status: newStatus }),
+        }),
+        {
+          loading: "Updating status...",
+          success: (response) => {
+            if (!response.ok) {
+              throw new Error(response.statusText);
+            }
+            return `User status changed to ${newStatus}.`;
+          },
+          error: (error) =>
+            `Failed to update status: ${error.message || "Unknown error"}`,
         }
       );
 
-      if (response.ok) {
-        alert(`User status changed to ${newStatus}.`);
+      if (res.ok) {
         setUsers((prevUsers) =>
           prevUsers.map((user) =>
             user._id === userId ? { ...user, status: newStatus } : user
           )
         );
       } else {
-        const errorData = await response.json();
-        console.error(
-          "Failed to update user status:",
-          errorData.message || response.statusText
-        );
-        alert(
-          `Failed to update user status: ${
-            errorData.message || response.statusText
-          }`
-        );
+        const errorData = await res.json();
+        console.error("Failed to update user status:", errorData.message);
       }
     } catch (error) {
       console.error("Error toggling user status:", error);
-      alert(`Error toggling status: ${error.message}`);
     }
   };
 
@@ -476,6 +544,7 @@ const UserManagement = ({ users: initialUsers, onUserUpdate }) => {
 
   return (
     <div className="space-y-6">
+      <Toaster position="top-right" reverseOrder={false} />{" "}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-white">User Management</h1>
@@ -810,16 +879,24 @@ const UserManagement = ({ users: initialUsers, onUserUpdate }) => {
                   <select
                     value={newUser.role}
                     onChange={(e) => {
-                      setNewUser({ ...newUser, role: e.target.value });
-                      // Clear ID/Year fields when role changes to prevent incorrect ID retention
-                      if (e.target.value !== "student")
-                        setNewUser((prev) => ({
-                          ...prev,
-                          studentId: "",
-                          year: "",
-                        }));
-                      if (e.target.value !== "faculty")
-                        setNewUser((prev) => ({ ...prev, facultyId: "" }));
+                      setNewUser((prev) => {
+                        const newRole = e.target.value;
+                        const updatedUser = { ...prev, role: newRole };
+
+                        // Clear ID/Year fields based on new role
+                        if (newRole !== "student") {
+                          updatedUser.studentId = "";
+                          updatedUser.year = ""; // Clear year if not student
+                        } else {
+                          // If becoming a student, set year to current year
+                          updatedUser.year = getCurrentYear();
+                        }
+
+                        if (newRole !== "faculty") {
+                          updatedUser.facultyId = "";
+                        }
+                        return updatedUser;
+                      });
                     }}
                     className="w-full rounded-lg border border-[#1f2d23] bg-transparent px-4 py-3 text-white transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-blue-500"
                     required
@@ -1002,8 +1079,8 @@ const UserManagement = ({ users: initialUsers, onUserUpdate }) => {
                   <input
                     type="email"
                     value={selectedUser.email}
-                    disabled // Email is typically immutable once set
-                    className="w-full cursor-not-allowed rounded-lg border border-[#1f2d23] bg-transparent px-4 py-3 text-gray-400" // Styled disabled
+                    disabled
+                    className="w-full cursor-not-allowed rounded-lg border border-[#1f2d23] bg-transparent px-4 py-3 text-gray-400"
                     required
                   />
                 </div>
@@ -1013,9 +1090,9 @@ const UserManagement = ({ users: initialUsers, onUserUpdate }) => {
                     Role *
                   </label>
                   <select
-                    disabled // Role is typically immutable once set
+                    disabled
                     value={selectedUser.role}
-                    className="w-full cursor-not-allowed rounded-lg border border-[#1f2d23] bg-transparent px-4 py-3 text-gray-400" // Styled disabled
+                    className="w-full cursor-not-allowed rounded-lg border border-[#1f2d23] bg-transparent px-4 py-3 text-gray-400"
                   >
                     <option value="student">Student</option>
                     <option value="faculty">Faculty</option>
@@ -1028,14 +1105,13 @@ const UserManagement = ({ users: initialUsers, onUserUpdate }) => {
                     Department
                   </label>
                   <input
-                    disabled // Department is typically immutable for most users
+                    disabled
                     type="text"
                     value={selectedUser.department || ""}
-                    className="w-full cursor-not-allowed rounded-lg border border-[#1f2d23] bg-transparent px-4 py-3 text-gray-400" // Styled disabled
+                    className="w-full cursor-not-allowed rounded-lg border border-[#1f2d23] bg-transparent px-4 py-3 text-gray-400"
                   />
                 </div>
 
-                {/* IDs and Year are not editable in Edit Modal, displayed as read-only text fields */}
                 {selectedUser.role === "student" && (
                   <div className="md:col-span-2">
                     <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -1157,7 +1233,7 @@ const UserManagement = ({ users: initialUsers, onUserUpdate }) => {
               <div className="flex items-center space-x-4">
                 <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-r from-blue-600 to-emerald-600">
                   <span className="text-xl font-bold text-white">
-                    {(selectedUser.name || "N/A") // Added fallback for name
+                    {(selectedUser.name || "N/A")
                       .split(" ")
                       .map((n) => n[0])
                       .join("")
@@ -1217,6 +1293,15 @@ const UserManagement = ({ users: initialUsers, onUserUpdate }) => {
                         <div className="flex items-center text-white">
                           <Calendar className="mr-2 h-4 w-4 text-gray-500" />
                           {selectedUser.year || "N/A"}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="mb-1 block text-sm font-medium text-gray-400">
+                          Academic Year
+                        </label>
+                        <div className="flex items-center text-white">
+                          <GraduationCap className="mr-2 h-4 w-4 text-gray-500" />
+                          {getAcademicYearDisplay(selectedUser.year)}
                         </div>
                       </div>
                       <div>
