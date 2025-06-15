@@ -8,6 +8,7 @@ import UserManagement from "./pages/Admin/UserManagement";
 import Layout from "./components/Layout";
 import PrivateRoute from "./components/PrivateRoute";
 import EventManagement from "./pages/Admin/EventManagement";
+import PlacementManagement from "./pages/Admin/PlacementManagement";
 
 function App() {
   const [appUsers, setAppUsers] = useState([]); // Initialize with an empty array or fetch data
@@ -36,6 +37,13 @@ function App() {
         <PrivateRoute>
           <Layout currentPageTitle="Event Management">
             <EventManagement/>
+          </Layout>
+        </PrivateRoute>
+      }></Route>
+      <Route path="/placements" element={
+        <PrivateRoute>
+          <Layout currentPageTitle="Placement Management">
+            <PlacementManagement/>
           </Layout>
         </PrivateRoute>
       }></Route>
