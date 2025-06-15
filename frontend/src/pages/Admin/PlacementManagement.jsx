@@ -9,11 +9,9 @@ import {
   Calendar,
   DollarSign,
   MapPin,
-  Users,
   Building2,
   GraduationCap,
   Mail,
-  ListFilter,
   Download,
 } from "lucide-react";
 import { jwtDecode } from "jwt-decode";
@@ -45,7 +43,7 @@ const PlacementManagement = () => {
   const [filterType, setFilterType] = useState("all"); // 'all', 'internship', 'fulltime'
   const [filterBatchYear, setFilterBatchYear] = useState("all"); // 'all' or a specific year
   const [filterDepartment, setFilterDepartment] = useState("all"); // 'all' or a specific department
-  const [showMyPlacements, setShowMyPlacements] = useState(false);
+  // Removed: [showMyPlacements, setShowMyPlacements] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingPlacement, setEditingPlacement] = useState(null);
   const [userRole, setUserRole] = useState("student");
@@ -92,14 +90,13 @@ const PlacementManagement = () => {
     setEditingPlacement(null);
   }, []);
 
-  // Function to fetch placement records
+  // Function to fetch placement records - MODIFIED
   const fetchPlacements = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const endpoint = showMyPlacements
-        ? `${API_BASE_URL}/placements/my`
-        : `${API_BASE_URL}/placements`;
+      // Always fetch all placements
+      const endpoint = `${API_BASE_URL}/placements`;
 
       const response = await fetch(endpoint, {
         method: "GET",
@@ -109,12 +106,7 @@ const PlacementManagement = () => {
       });
 
       if (!response.ok) {
-        if (response.status === 401 || response.status === 403) {
-          if (showMyPlacements) {
-            toast.error("You must be logged in to view your placements.");
-          }
-          throw new Error("Authentication failed or unauthorized.");
-        }
+        // Removed specific 401/403 message for 'my' placements
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
@@ -147,13 +139,11 @@ const PlacementManagement = () => {
         err.message || "Failed to load placements. Please try again later."
       );
       toast.error(err.message || "Failed to load placements.");
-      if (showMyPlacements) {
-        setPlacements([]);
-      }
+      // No need to clear placements based on showMyPlacements anymore
     } finally {
       setLoading(false);
     }
-  }, [token, API_BASE_URL, showMyPlacements]);
+  }, [token, API_BASE_URL]); // showMyPlacements is removed from dependencies
 
   // Effect to decode token and set user role/ID
   useEffect(() => {
@@ -375,7 +365,7 @@ const PlacementManagement = () => {
 
   const handleExportExcel = async () => {
     try {
-      toast.loading("Generating Excel file...", { id: "excelExport" });
+      toast.loading("Generating file...", { id: "excelExport" });
       const response = await fetch(`${API_BASE_URL}/placements/export`, {
         method: "GET",
         headers: {
@@ -388,7 +378,7 @@ const PlacementManagement = () => {
         throw new Error(`Failed to export: ${response.status} - ${errorText}`);
       }
 
-      // Get filename from Content-Disposition header if available
+      // Get filename from Content-Disposition header if available, but force .csv
       const contentDisposition = response.headers.get("Content-Disposition");
       let filename = "placements_data.csv"; // Default to .csv
       if (contentDisposition) {
@@ -410,12 +400,12 @@ const PlacementManagement = () => {
       a.remove();
       window.URL.revokeObjectURL(url); // Clean up
 
-      toast.success("Excel file downloaded successfully!", {
+      toast.success("CSV file downloaded successfully!", {
         id: "excelExport",
       });
     } catch (err) {
-      console.error("Error exporting Excel:", err);
-      toast.error(err.message || "Failed to export Excel file.", {
+      console.error("Error exporting file:", err);
+      toast.error(err.message || "Failed to export file.", {
         id: "excelExport",
       });
     }
@@ -515,7 +505,7 @@ const PlacementManagement = () => {
         </div>
       </div>
 
-      {/* Filters and My Placements Toggle */}
+      {/* Filters */}
       <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-md flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
           <span className="text-gray-600 text-lg font-semibold">Filters:</span>
@@ -558,29 +548,7 @@ const PlacementManagement = () => {
             ))}
           </select>
         </div>
-
-        {/* "My Placements" Button */}
-        <button
-          onClick={() => {
-            if (!token) {
-              toast.error("Please log in to view your placements.");
-              return;
-            }
-            setShowMyPlacements(!showMyPlacements);
-            // Type/batch/dept filters still apply.
-          }}
-          className={twMerge(
-            `px-5 py-2.5 rounded-lg text-base font-medium transition-all duration-300 flex items-center justify-center space-x-2 w-full sm:w-auto ml-auto transform hover:scale-105`,
-            showMyPlacements
-              ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg"
-              : "bg-gray-100 text-gray-700 hover:bg-gray-200 hover:text-gray-900 ring-1 ring-gray-200"
-          )}
-        >
-          <Users className="w-5 h-5" />
-          <span>
-            {showMyPlacements ? "Viewing My Placements" : "Show My Placements"}
-          </span>
-        </button>
+        {/* Removed "My Placements" Button */}
       </div>
 
       {loading && (
@@ -750,9 +718,8 @@ const PlacementManagement = () => {
                   No Placement Records Found
                 </h3>
                 <p className="text-gray-500 text-lg">
-                  {showMyPlacements
-                    ? "You have not added any placement records yet, or none match your filters. Add one to see it here!"
-                    : "There are no placement records matching your current filters. Try adjusting your selection."}
+                  There are no placement records matching your current filters.
+                  Try adjusting your selection or adding a new record.
                 </p>
               </div>
             )}
