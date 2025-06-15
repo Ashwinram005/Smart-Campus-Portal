@@ -1,7 +1,7 @@
 const Placement = require("../model/Placement");
 const User = require("../model/User");
 const { Parser } = require("json2csv");
-const moment = require('moment'); // ✅ install if not yet
+const moment = require("moment"); // ✅ install if not yet
 
 exports.createPlacementRecord = async (req, res) => {
   try {
@@ -199,36 +199,38 @@ exports.exportPlacementCSV = async (req, res) => {
     const records = await Placement.find().lean();
 
     if (records.length === 0) {
-      return res.status(404).json({ message: 'No placement records to export' });
+      return res
+        .status(404)
+        .json({ message: "No placement records to export" });
     }
 
     // ✅ Format driveDate
-    const formatted = records.map(r => ({
+    const formatted = records.map((r) => ({
       ...r,
-      driveDate: r.driveDate ? moment(r.driveDate).format('DD-MM-YYYY') : ''
+      driveDate: r.driveDate ? moment(r.driveDate).format("DD-MM-YYYY") : "",
     }));
 
     const fields = [
-      'studentId',
-      'name',
-      'email',
-      'department',
-      'batchYear',
-      'company',
-      'role',
-      'package',
-      'type',
-      'location',
-      'driveDate'
+      "studentId",
+      "name",
+      "email",
+      "department",
+      "batchYear",
+      "company",
+      "role",
+      "package",
+      "type",
+      "location",
+      "driveDate",
     ];
 
     const parser = new Parser({ fields });
     const csv = parser.parse(formatted);
 
-    res.header('Content-Type', 'text/csv');
-    res.attachment('placement-records.csv');
+    res.header("Content-Type", "text/csv");
+    res.attachment("placement-records.csv");
     res.send(csv);
   } catch (err) {
-    res.status(500).json({ message: 'CSV export failed', error: err.message });
+    res.status(500).json({ message: "CSV export failed", error: err.message });
   }
-}
+};
