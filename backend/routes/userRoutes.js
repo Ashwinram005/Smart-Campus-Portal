@@ -8,7 +8,7 @@ const {
   toggleUserStatus
 } = require('../controller/userController');
 
-const { protect, authorizeRoles } = require('../middlware/authMiddleware');
+const { protect, authorizeRoles } = require('../middleware/authMiddleware');
 
 // ✅ Protect all routes & allow only admin access
 router.use(protect);

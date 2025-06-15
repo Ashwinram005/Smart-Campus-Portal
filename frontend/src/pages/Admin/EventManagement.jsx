@@ -384,7 +384,7 @@ const EventManagement = () => {
   return (
     <div className="p-6 space-y-6 bg-gray-50 min-h-screen">
       <Toaster position="top-right" />
-      <div className="flex flex-col md:flex-row md:items-center justify-between  pb-4 border-b border-gray-200 gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between pb-4 border-b border-gray-200 gap-4">
         <div>
           <h1 className="text-3xl font-extrabold text-gray-900">
             Campus Announcements
