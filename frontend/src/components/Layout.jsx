@@ -39,7 +39,7 @@ const sideMenu = [
   { icon: DashboardIcon, label: "Dashboard", path: "/dashboard" },
   { icon: MyRepoIcon, label: "Users", path: "/user" },
   { icon: MyContentIcon, label: "Events", path: "/events" },
-  { icon: MyBlogsIcon, label: "My Blogs", path: "/blogs" },
+  { icon: MyBlogsIcon, label: "Placements", path: "/placements" },
   { icon: TeamsIcon, label: "Teams", path: "/teams" },
   { icon: ChallengesIcon, label: "Challenges", path: "/challenges" },
   { icon: AnalyticsIcon, label: "Analytics", path: "/analytics" },

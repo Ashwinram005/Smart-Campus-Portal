@@ -5,12 +5,13 @@ import {
   MapPin,
   Users,
   Plus,
-  Filter,
   Edit,
   Trash2,
+  X, // Added for modal close button
 } from "lucide-react";
 import { jwtDecode } from "jwt-decode";
 import toast, { Toaster } from "react-hot-toast";
+import { twMerge } from "tailwind-merge"; // Import twMerge
 
 /**
  * @typedef {Object} Announcement
@@ -33,7 +34,7 @@ import toast, { Toaster } from "react-hot-toast";
 const EventManagement = () => {
   const [announcements, setAnnouncements] = useState([]);
   const [filter, setFilter] = useState("all");
-  const [showMyAnnouncements, setShowMyAnnouncements] = useState(false); // Correctly a boolean
+  const [showMyAnnouncements, setShowMyAnnouncements] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingAnnouncement, setEditingAnnouncement] = useState(null);
   const [userRole, setUserRole] = useState("student");
@@ -382,16 +383,16 @@ const EventManagement = () => {
   };
 
   return (
-    <div className="p-6 space-y-6 bg-gray-50 min-h-screen">
+    <div className="p-4 sm:p-6 space-y-6 bg-gray-50 min-h-screen font-sans">
       <Toaster position="top-right" />
       <div className="flex flex-col md:flex-row md:items-center justify-between pb-4 border-b border-gray-200 gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold text-gray-900">
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 leading-tight">
             Campus Announcements
           </h1>
-          {/* <p className="text-gray-600 mt-2 text-lg">
+          <p className="text-gray-600 mt-2 text-base sm:text-lg">
             Stay updated with the latest campus news and activities.
-          </p> */}
+          </p>
         </div>
         {(userRole === "admin" || userRole === "faculty") && (
           <button
@@ -399,10 +400,12 @@ const EventManagement = () => {
               resetForm();
               setShowCreateForm(true);
             }}
-            className="bg-gradient-to-r from-blue-600 to-emerald-600 text-white px-5 py-2.5 rounded-lg font-medium text-lg hover:from-blue-700 hover:to-emerald-700 transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl w-full md:w-auto"
+            className="group relative inline-flex items-center justify-center p-0.5 mb-2 me-2 overflow-hidden text-sm font-medium text-gray-900 rounded-lg bg-gradient-to-br from-purple-600 to-blue-500 group-hover:from-purple-600 group-hover:to-blue-500 hover:text-white dark:text-white focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 w-full md:w-auto"
           >
-            <Plus className="w-5 h-5" />
-            <span>Create New</span>
+            <span className="relative flex items-center justify-center px-5 py-2.5 transition-all ease-in duration-75 bg-white dark:bg-gray-900 rounded-md group-hover:bg-opacity-0 text-lg">
+              <Plus className="w-5 h-5 mr-2" />
+              Create New
+            </span>
           </button>
         )}
       </div>
@@ -410,21 +413,24 @@ const EventManagement = () => {
       {/* Filters and My Announcements Toggle */}
       <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-md flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
         {/* Simple Type Filters */}
-        <div className="flex-wrap flex items-center space-x-2 gap-y-2">
-          <span className="text-gray-600">Filter by Type:</span>
+        <div className="flex flex-wrap items-center space-x-2 gap-y-2">
+          <span className="text-gray-600 text-lg font-semibold">
+            Filter by Type:
+          </span>
           {["all", "Academic", "Notice", "Event", "Holiday"].map(
             (typeOption) => (
               <button
                 key={typeOption}
                 onClick={() => {
                   setFilter(typeOption);
-                  setShowMyAnnouncements(false); // Make sure "My Announcements" is off when a type filter is active
+                  // Keep showMyAnnouncements state as is, but filter based on it
                 }}
-                className={`px-3 py-1 rounded-full text-sm font-medium transition-all duration-200 ${
-                  filter === typeOption && !showMyAnnouncements // Active state for type filter
-                    ? "bg-gradient-to-r from-blue-600 to-emerald-600 text-white shadow-md"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200 hover:text-gray-900"
-                }`}
+                className={twMerge(
+                  `px-4 py-2 rounded-full text-base font-medium transition-all duration-300 transform hover:scale-105`,
+                  filter === typeOption
+                    ? "bg-gradient-to-r from-blue-600 to-emerald-600 text-white shadow-lg"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200 hover:text-gray-900 ring-1 ring-gray-200"
+                )}
               >
                 {typeOption.charAt(0).toUpperCase() + typeOption.slice(1)}
               </button>
@@ -440,13 +446,14 @@ const EventManagement = () => {
               return;
             }
             setShowMyAnnouncements(!showMyAnnouncements); // Toggle
-            setFilter("all"); // Reset type filter when toggling "My Announcements"
+            // No need to reset type filter here, as type filter applies to both
           }}
-          className={`px-4 py-2 rounded-lg text-base font-medium transition-all duration-200 flex items-center justify-center space-x-2 w-full sm:w-auto ml-auto ${
-            showMyAnnouncements // Active state for My Announcements
-              ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-md"
-              : "bg-gray-100 text-gray-700 hover:bg-gray-200 hover:text-gray-900"
-          }`}
+          className={twMerge(
+            `px-5 py-2.5 rounded-lg text-base font-medium transition-all duration-300 flex items-center justify-center space-x-2 w-full sm:w-auto ml-auto transform hover:scale-105`,
+            showMyAnnouncements
+              ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg"
+              : "bg-gray-100 text-gray-700 hover:bg-gray-200 hover:text-gray-900 ring-1 ring-gray-200"
+          )}
         >
           <Users className="w-5 h-5" />
           <span>
@@ -460,7 +467,7 @@ const EventManagement = () => {
       {loading && (
         <div className="text-center py-16">
           <svg
-            className="animate-spin h-10 w-10 text-blue-600 mx-auto mb-4"
+            className="animate-spin h-12 w-12 text-blue-600 mx-auto mb-4"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
@@ -498,12 +505,12 @@ const EventManagement = () => {
       {!loading && !error && (
         <>
           {/* Announcements Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {displayedAnnouncements.length > 0 ? (
               displayedAnnouncements.map((announcement) => (
                 <div
                   key={announcement._id}
-                  className="bg-white rounded-xl p-6 border border-gray-200 shadow-md hover:shadow-xl transition-all duration-300 relative group"
+                  className="bg-white rounded-2xl p-6 border border-gray-100 shadow-lg hover:shadow-xl transition-all duration-300 relative group transform hover:-translate-y-1"
                 >
                   {/* Edit/Delete Buttons for authorized users */}
                   {(userRole === "admin" ||
@@ -512,7 +519,7 @@ const EventManagement = () => {
                     <div className="absolute top-4 right-4 flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                       <button
                         onClick={() => handleEditClick(announcement)}
-                        className="text-gray-500 hover:text-blue-600 bg-gray-100 hover:bg-blue-50 p-2 rounded-full transition-colors duration-200"
+                        className="text-gray-500 hover:text-blue-600 bg-gray-100 hover:bg-blue-50 p-2 rounded-full transition-colors duration-200 shadow-sm"
                         title="Edit Announcement"
                       >
                         <Edit className="w-5 h-5" />
@@ -521,7 +528,7 @@ const EventManagement = () => {
                         onClick={() =>
                           handleDeleteAnnouncement(announcement._id)
                         }
-                        className="text-gray-500 hover:text-red-600 bg-gray-100 hover:bg-red-50 p-2 rounded-full transition-colors duration-200"
+                        className="text-gray-500 hover:text-red-600 bg-gray-100 hover:bg-red-50 p-2 rounded-full transition-colors duration-200 shadow-sm"
                         title="Delete Announcement"
                       >
                         <Trash2 className="w-5 h-5" />
@@ -530,7 +537,7 @@ const EventManagement = () => {
                   )}
 
                   <div className="flex items-start justify-between mb-4">
-                    <h3 className="text-xl font-bold text-gray-900 line-clamp-2 pr-10">
+                    <h3 className="text-xl font-extrabold text-gray-900 line-clamp-2 pr-10">
                       {announcement.title}
                     </h3>
                     <span
@@ -583,20 +590,26 @@ const EventManagement = () => {
                         <Users className="w-4 h-4 mr-3 text-orange-600" />
                         <span>
                           Posted by{" "}
-                          {announcement.organizer || announcement.createdByRole}
+                          {announcement.organizer ||
+                            announcement.createdByRole.charAt(0).toUpperCase() +
+                              announcement.createdByRole.slice(1)}
                         </span>
                       </div>
                     )}
                     {announcement.tags?.audience && (
                       <div className="flex items-center">
                         <Users className="w-4 h-4 mr-3 text-indigo-600" />
-                        <span>Audience: {announcement.tags.audience}</span>
+                        <span>
+                          Audience:{" "}
+                          {announcement.tags.audience.charAt(0).toUpperCase() +
+                            announcement.tags.audience.slice(1)}
+                        </span>
                       </div>
                     )}
                   </div>
                   {userRole === "student" && announcement.type === "Event" && (
                     <div className="mt-6 pt-4 border-t border-gray-100">
-                      <button className="w-full bg-gradient-to-r from-blue-600 to-emerald-600 text-white py-2.5 rounded-lg font-medium hover:from-blue-700 hover:to-emerald-700 transition-all duration-200 shadow-md">
+                      <button className="w-full bg-gradient-to-r from-blue-600 to-emerald-600 text-white py-2.5 rounded-lg font-medium hover:from-blue-700 hover:to-emerald-700 transition-all duration-200 shadow-md transform hover:scale-105">
                         Register for Event
                       </button>
                     </div>
@@ -604,14 +617,14 @@ const EventManagement = () => {
                 </div>
               ))
             ) : (
-              <div className="col-span-full text-center py-20">
+              <div className="col-span-full text-center py-20 bg-white rounded-xl shadow-md p-6">
                 <Calendar className="w-20 h-20 text-gray-300 mx-auto mb-6" />
                 <h3 className="text-2xl font-bold text-gray-700 mb-3">
                   No Announcements Found
                 </h3>
                 <p className="text-gray-500 text-lg">
                   {showMyAnnouncements
-                    ? "You have not created any announcements yet. Create one to see it here!"
+                    ? "You have not created any announcements yet, or none match your filter. Create one to see it here!"
                     : "There are no announcements matching your current filter. Try adjusting your selection."}
                 </p>
               </div>
@@ -622,9 +635,16 @@ const EventManagement = () => {
 
       {/* Create/Edit Announcement Modal */}
       {showCreateForm && (
-        <div className="fixed inset-0 bg-black/60 text-black backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl p-8 w-full max-w-md shadow-2xl relative">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 z-[100]">
+          <div className="bg-white rounded-2xl p-6 sm:p-8 w-full max-w-md shadow-2xl relative animate-fade-in-up">
+            <button
+              onClick={handleCloseForm}
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-900 p-2 rounded-full hover:bg-gray-100 transition-colors"
+              title="Close"
+            >
+              <X className="w-6 h-6" />
+            </button>
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6 text-center">
               {editingAnnouncement
                 ? "Edit Announcement"
                 : "Create New Announcement"}
@@ -640,7 +660,7 @@ const EventManagement = () => {
                 <input
                   type="text"
                   id="announcement-title"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-gray-900 placeholder-gray-400"
                   placeholder="Enter announcement title"
                   value={formAnnouncement.title}
                   onChange={handleFormChange}
@@ -657,7 +677,7 @@ const EventManagement = () => {
                 </label>
                 <select
                   id="type"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white text-gray-900"
                   value={formAnnouncement.type}
                   onChange={handleFormChange}
                   required
@@ -679,7 +699,7 @@ const EventManagement = () => {
                 <input
                   type="date"
                   id="announcement-date"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-gray-900"
                   value={formAnnouncement.date}
                   onChange={handleFormChange}
                   required
@@ -687,7 +707,7 @@ const EventManagement = () => {
               </div>
 
               {formAnnouncement.type === "Event" && (
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label
                       htmlFor="announcement-time"
@@ -698,7 +718,7 @@ const EventManagement = () => {
                     <input
                       type="time"
                       id="announcement-time"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-gray-900"
                       value={formAnnouncement.time}
                       onChange={handleFormChange}
                     />
@@ -713,7 +733,7 @@ const EventManagement = () => {
                     <input
                       type="text"
                       id="announcement-location"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-gray-900 placeholder-gray-400"
                       placeholder="Enter location"
                       value={formAnnouncement.location}
                       onChange={handleFormChange}
@@ -732,7 +752,7 @@ const EventManagement = () => {
                 <input
                   type="text"
                   id="announcement-organizer"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-gray-900 placeholder-gray-400"
                   placeholder="e.g., Tech Club, Dept. of CSE"
                   value={formAnnouncement.organizer}
                   onChange={handleFormChange}
@@ -749,7 +769,7 @@ const EventManagement = () => {
                 <textarea
                   id="announcement-description"
                   rows={4}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-y"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-y text-gray-900 placeholder-gray-400"
                   placeholder="Enter announcement description"
                   value={formAnnouncement.description}
                   onChange={handleFormChange}
@@ -766,7 +786,7 @@ const EventManagement = () => {
                 </label>
                 <select
                   id="announcement-audience"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white text-gray-900"
                   value={formAnnouncement.tags.audience}
                   onChange={handleFormChange}
                 >
@@ -776,17 +796,17 @@ const EventManagement = () => {
                 </select>
               </div>
 
-              <div className="flex space-x-4 pt-4">
+              <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 pt-4">
                 <button
                   type="button"
                   onClick={handleCloseForm}
-                  className="flex-1 px-5 py-2.5 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-100 transition-colors duration-200 shadow-sm"
+                  className="flex-1 px-5 py-2.5 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-100 transition-colors duration-200 shadow-sm transform hover:scale-105"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 bg-gradient-to-r from-blue-600 to-emerald-600 text-white px-5 py-2.5 rounded-lg font-medium hover:from-blue-700 hover:to-emerald-700 transition-all duration-300 shadow-md"
+                  className="flex-1 bg-gradient-to-r from-blue-600 to-emerald-600 text-white px-5 py-2.5 rounded-lg font-medium hover:from-blue-700 hover:to-emerald-700 transition-all duration-300 shadow-md transform hover:scale-105"
                 >
                   {editingAnnouncement
                     ? "Update Announcement"
