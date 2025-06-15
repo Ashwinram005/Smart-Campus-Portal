@@ -7,6 +7,7 @@ const announcementRoutes = require("./routes/announcementRoutes");
 const placementRoutes = require("./routes/placementRoutes");
 const courseRoutes = require("./routes/courseRoutes");
 const materialRoutes = require("./routes/courseMaterialRoutes");
+const assignmentRoutes = require("./routes/assignmentRoutes");
 
 const cors = require("cors");
 
@@ -28,6 +29,7 @@ app.use("/api/announcements", announcementRoutes);
 app.use("/api/placements", placementRoutes);
 app.use("/api/courses", courseRoutes);
 app.use("/api/materials", materialRoutes);
+app.use("/api/assignments", assignmentRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
