@@ -1,106 +1,145 @@
-# Smart Campus Portal
+# 🎓 Smart Campus Portal
 
-## 🧠 Overview
+Smart Campus Portal is a full-stack web application developed as part of the **"MERN Mavericks – Code, Create & Conquer"** Hackathon. It acts as a centralized digital platform to manage academic workflows, announcements, placements, and student-faculty interactions within a campus ecosystem.
 
-Smart Campus Portal is a full-stack web application built during the "MERN Mavericks" Hackathon. It serves as a centralized platform for students, faculty, and admins to manage academic activities, communicate important announcements, and track placement records.
+## 🧰 Tech Stack
 
-## 🧩 Tech Stack
+- **Frontend**: React.js, Tailwind CSS, Cloudinary (for media uploads)
+- **Backend**: Node.js, Express.js
+- **Database**: MongoDB (with Mongoose ODM)
+- **Authentication**: JWT (JSON Web Token)
+- **Security**: Bcrypt (password hashing)
 
-* **Frontend**: React.js, JavaScript, Tailwind CSS
-* **Backend**: Node.js, Express.js
-* **Database**: MongoDB (Mongoose ODM)
-* **Authentication**: JWT-based with role-based access control
-* **Cloudinary**: Used for managing uploaded media (assignments, materials)
+## 👤 User Roles & Features
 
-## 🔐 Roles Supported
+### 🧑‍🎓 Student
+- 📘 View enrolled **Courses**
+- 📝 Submit **Assignments**
+- 🎯 Track **Placement** eligibility and status
+- 📢 Receive **Announcements** and notices
 
-* **Admin**: Full access to manage users, announcements, placements, and oversee platform-wide data.
-* **Faculty**: Manage announcements, courses, upload materials, post assignments, and view student submissions.
-* **Student**: View enrolled courses, get announcements, and submit assignments.
+### 👨‍🏫 Faculty
+- 📘 Manage their assigned **Courses**
+- 📝 Create & evaluate **Assignments**
+- 📢 Post academic **Announcements**
+- 📤 Upload materials via Cloudinary
 
----
+### 👨‍💼 Admin
+- 👥 Full **User Management** (Students & Faculty)
+- 📢 Create and manage **Announcements**
+- 🎯 Manage **Placement Records**
+- 📘 Add / Edit **Courses**
 
-## 🛠️ Setup Instructions
+## ⚙️ Setup Instructions
 
-### 1. Clone Repository
+### 1. Clone the Repository
 
 ```bash
 git clone https://github.com/Ashwinram005/Smart-Campus-Portal.git
+cd Smart-Campus-Portal
 ```
 
-### 2. Setup Backend
+### 2. Backend Setup
 
 ```bash
 cd backend
 npm install
-# Configure `.env` file
-npm run dev
 ```
 
-### 3. Setup Frontend
-
-```bash
-cd frontend
-npm install
-# Configure `.env` file
-npm run dev
-```
-
-### 4. Environment Variables
-
-Backend `.env`:
+Create a `.env` file inside the `backend/` directory:
 
 ```env
 PORT=5000
-MONGO_URI=your_mongodb_uri
-JWT_SECRET=your_secret_key
+MONGO_URI=your_mongodb_connection_string
+JWT_SECRET=your_jwt_secret
 JWT_EXPIRES_IN=1d
 ```
 
----
+Start the backend server:
 
-## 📂 Folder Structure
-
-```
-backend/
-  models/
-  controllers/
-  routes/
-  middleware/
-  config/
-  index.js
-frontend/
-  components/
-  pages/
-  utils/
-  App.jsx
-  main.jsx
+```bash
+npm run dev
 ```
 
----
+### 3. Frontend Setup
 
-## 📝 Additional Notes
+```bash
+cd ../frontend
+npm install
+```
 
-* Faculty can only manage their own courses, materials, and assignments.
-* Students can submit assignments only for their enrolled courses.
-* Admin can view and manage all records across users, placements, and announcements.
-* Cloudinary is used to handle file storage for assignments and course materials.
+Create a `.env` file inside the `frontend/` directory:
 
----
+```env
+VITE_CLOUDINARY_UPLOAD_PRESET=your_upload_preset
+VITE_CLOUDINARY_CLOUD_NAME=your_cloud_name
+```
 
-## 📌 Authors
+Start the frontend development server:
 
-Built by:
+```bash
+npm run dev
+```
 
-* **ASHWINRAM M**
+## 🔐 Default Admin Credentials (for Initial Login)
 
----
+To log in as an Admin for the first time, use the credentials below:
 
-## 🏁 Final Words
+📧 **Email**: `admin1@example.com`  
+🔑 **Password**: `adminpass`  
+⚠️ This Admin account is pre-inserted into the MongoDB database during initial setup using a securely hashed password.  
+✅ After logging in, the Admin can create additional Admin, Faculty, or Student accounts through the web interface.  
 
-This project was developed in a limited time during the MERN Mavericks Hackathon. Future improvements can include:
+## 📁 Project Structure
 
-* Attendance Tracking
-* Grade Management
-* Real-time Messaging
-* Notifications / Email Alerts
+```
+Smart-Campus-Portal/
+├── backend/
+│ ├── config/
+│ ├── controllers/
+│ ├── middleware/
+│ ├── models/
+│ ├── routes/
+│ ├── .env
+│ ├── .gitignore
+│ ├── index.js
+│ ├── package.json
+│ └── package-lock.json
+├── frontend/
+│ ├── public/
+│ ├── src/
+│ │ ├── assets/
+│ │ ├── components/
+│ │ ├── pages/
+│ │ ├── App.jsx
+│ │ └── main.jsx
+│ ├── .env
+│ ├── .gitignore
+│ ├── index.html
+│ ├── eslint.config.js
+│ ├── package.json
+│ ├── package-lock.json
+│ ├── vite.config.js
+├── README.md
+```
+
+## 📌 Notes
+
+- Passwords are securely hashed using `bcrypt`.
+- File uploads (e.g., assignments, materials) are stored in `Cloudinary`.
+- Role-based access is enforced using JWT authentication and middleware.
+- Faculty can access only their assigned courses and students.
+- Students can view and interact only with content relevant to their enrollment.
+
+## 💡 Future Enhancements
+
+- 🕒 Attendance Management
+- 📊 Gradebook / Internal Marks
+- 💬 Real-time Chat or Discussion Board
+- 🔔 Notification System (Email / In-App)
+
+## 👥 Authors
+
+Developed by:
+
+- **ASHWINRAM M**
