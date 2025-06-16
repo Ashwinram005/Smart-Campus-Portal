@@ -71,8 +71,9 @@ npm install
 Create a `.env` file inside the `frontend/` directory:
 
 ```env
-VITE_CLOUDINARY_UPLOAD_PRESET=your_upload_preset
-VITE_CLOUDINARY_CLOUD_NAME=your_cloud_name
+VITE_BACKEND_URL=BACKENDURL/api
+VITE_CLOUDINARY_CLOUD_NAME=your_coud_name
+VITE_CLOUDINARY_UPLOAD_PRESET=your_cloud_preset
 ```
 
 Start the frontend development server:
