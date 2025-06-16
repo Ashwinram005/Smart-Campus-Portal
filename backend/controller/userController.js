@@ -1,7 +1,79 @@
 const User = require("../model/User");
 const bcrypt = require("bcryptjs");
 const { Parser } = require("json2csv");
+const Course = require('../model/Course');
+const Assignment = require('../model/Assignment');
+const Announcement = require('../model/Announcement');
+const Submission = require('../model/Submission');
+const Placement = require('../model/Placement');
 
+exports.getDashboardStats = async (req, res) => {
+  try {
+    const { role, _id, department, year } = req.user;
+
+    if (role === 'student') {
+      const courses = await Course.find({ enrolledStudents: _id });
+      const courseIds = courses.map(c => c._id);
+      const assignments = await Assignment.find({ course: { $in: courseIds } });
+      const assignmentIds = assignments.map(a => a._id);
+      const submissions = await Submission.find({ student: _id });
+      const submittedIds = submissions.map(s => s.assignment.toString());
+      const pendingCount = assignmentIds.filter(id => !submittedIds.includes(id.toString())).length;
+
+      const announcements = await Announcement.find({
+        $or: [
+          { 'tags.audience': 'all' },
+          { 'tags.audience': 'students', 'tags.department': department, 'tags.year': year }
+        ]
+      }).sort({ createdAt: -1 }).limit(5);
+
+      return res.status(200).json({
+        role,
+        totalCourses: courses.length,
+        totalAssignments: assignments.length,
+        submitted: submissions.length,
+        pending: pendingCount,
+        announcements
+      });
+    }
+
+    if (role === 'faculty') {
+      const courses = await Course.find({ createdBy: _id });
+      const courseIds = courses.map(c => c._id);
+      const assignments = await Assignment.find({ course: { $in: courseIds } });
+      const assignmentIds = assignments.map(a => a._id);
+      const submissions = await Submission.find({ assignment: { $in: assignmentIds } });
+      const announcements = await Announcement.find({ createdBy: _id }).sort({ createdAt: -1 }).limit(5);
+
+      return res.status(200).json({
+        role,
+        totalCourses: courses.length,
+        totalAssignments: assignments.length,
+        totalSubmissions: submissions.length,
+        announcements
+      });
+    }
+
+    if (role === 'admin') {
+      const studentCount = await User.countDocuments({ role: 'student' });
+      const facultyCount = await User.countDocuments({ role: 'faculty' });
+      const announcementCount = await Announcement.countDocuments();
+      const placementCount = await Placement.countDocuments();
+
+      return res.status(200).json({
+        role,
+        studentCount,
+        facultyCount,
+        announcementCount,
+        placementCount
+      });
+    }
+
+    res.status(400).json({ message: 'Invalid role' });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to fetch dashboard stats', error: err.message });
+  }
+};
 // GET /api/users
 exports.getAllUsers = async (req, res) => {
   try {

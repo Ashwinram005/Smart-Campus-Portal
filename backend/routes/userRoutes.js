@@ -8,19 +8,23 @@ const {
   toggleUserStatus,
   downloadUsersCSV,
   getUserDetails,
+  getDashboardStats,
 } = require("../controller/userController");
 
 const { protect, authorizeRoles } = require("../middleware/authMiddleware");
 
 // ✅ Protect all routes & allow only admin access
-router.get("/:id", protect, getUserDetails);
 router.use(protect);
-router.use(authorizeRoles("admin"));
-// Routes
-router.get("/", getAllUsers); // GET all users
-router.get("/csv", downloadUsersCSV); // GET all users
-router.put("/:id", updateUser); // Update user by ID
-router.patch("/:id/toggle-status", toggleUserStatus); // Toggle active/inactive
-router.delete("/:id", deleteUser); // Delete user by ID
+router.get("/dashboard", getDashboardStats);
+
+// ✅ Admin-only routes BEFORE the dynamic one
+router.get("/csv", authorizeRoles("admin"), downloadUsersCSV);
+router.get("/", authorizeRoles("admin"), getAllUsers);
+router.put("/:id", authorizeRoles("admin"), updateUser);
+router.patch("/:id/toggle-status", authorizeRoles("admin"), toggleUserStatus);
+router.delete("/:id", authorizeRoles("admin"), deleteUser);
+
+// ✅ Dynamic route last to avoid clash
+router.get("/:id", getUserDetails);
 
 module.exports = router;
