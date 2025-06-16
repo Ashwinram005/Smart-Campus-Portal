@@ -17,6 +17,11 @@ router.get("/faculty", protect, authorizeRoles("faculty"), getMyCourses);
 router.get("/student", protect, authorizeRoles("student"), getStudentCourses);
 router.put("/:id", protect, authorizeRoles("faculty"), updateCourse);
 router.delete("/:id", protect, authorizeRoles("faculty"), deleteCourse);
-router.put('/:id/sync', protect, authorizeRoles('faculty'), syncEnrolledStudents);
+router.put(
+  "/:id/sync",
+  protect,
+  authorizeRoles("faculty"),
+  syncEnrolledStudents
+);
 
 module.exports = router;
