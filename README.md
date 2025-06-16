@@ -81,12 +81,14 @@ Start the frontend development server:
 npm run dev
 ```
 
-##🔐 Default Admin Credentials (for Initial Login)
--To log in as an Admin for the first time, use the credentials below:
-    -📧 Email: admin@example.com 
-    -🔑 Password: admin123
--⚠️ This Admin account is pre-inserted into the MongoDB database during initial setup using a securely hashed password.
--✅ After logging in, the Admin can create additional Admin, Faculty, or Student accounts through the web interface.
+## 🔐 Default Admin Credentials (for Initial Login)
+
+To log in as an Admin for the first time, use the credentials below:
+
+📧 **Email**: `admin@example.com`  
+🔑 **Password**: `admin123`  
+⚠️ This Admin account is pre-inserted into the MongoDB database during initial setup using a securely hashed password.  
+✅ After logging in, the Admin can create additional Admin, Faculty, or Student accounts through the web interface.  
 
 ## 📁 Project Structure
 
