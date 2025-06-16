@@ -14,6 +14,6 @@ router.get(
   authorizeRoles("student", "faculty"),
   getMaterialsByCourse
 );
-router.delete('/:id', protect, authorizeRoles('faculty'), deleteMaterial);
+router.delete("/:id", protect, authorizeRoles("faculty"), deleteMaterial);
 
 module.exports = router;

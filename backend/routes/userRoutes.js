@@ -7,11 +7,13 @@ const {
   deleteUser,
   toggleUserStatus,
   downloadUsersCSV,
+  getUserDetails,
 } = require("../controller/userController");
 
 const { protect, authorizeRoles } = require("../middleware/authMiddleware");
 
 // ✅ Protect all routes & allow only admin access
+router.get("/:id", protect, getUserDetails);
 router.use(protect);
 router.use(authorizeRoles("admin"));
 // Routes
