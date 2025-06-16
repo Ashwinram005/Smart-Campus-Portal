@@ -76,11 +76,11 @@ import toast, { Toaster } from "react-hot-toast";
  * @property {string} studentId
  */
 
-const API_BASE_URL = "http://localhost:5000/api";
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 // --- Cloudinary Configuration (Confirmed from your code) ---
-const CLOUDINARY_CLOUD_NAME = "dzeweglcv";
-const CLOUDINARY_UPLOAD_PRESET = "SmartcampusPortal";
+const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
 
 // --- Helper Functions ---
 

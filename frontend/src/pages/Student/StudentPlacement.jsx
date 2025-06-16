@@ -42,7 +42,7 @@ const StudentPlacement = () => {
   const [userId, setUserId] = useState(null); // Not strictly needed for fetching *all* records, but good for context
 
   const token = localStorage.getItem("token");
-  const API_BASE_URL = "http://localhost:5000/api"; // Your backend API base URL
+  const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
   useEffect(() => {
     if (token) {

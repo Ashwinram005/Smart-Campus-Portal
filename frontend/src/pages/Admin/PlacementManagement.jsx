@@ -52,7 +52,7 @@ const PlacementManagement = () => {
   const [error, setError] = useState(null);
 
   const token = localStorage.getItem("token");
-  const API_BASE_URL = "http://localhost:5000/api";
+  const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
   const [formPlacement, setFormPlacement] = useState({
     studentId: "",
@@ -579,7 +579,7 @@ const PlacementManagement = () => {
         </div>
       )}
 
-      {!loading  && (
+      {!loading && (
         <>
           {/* Placements Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">

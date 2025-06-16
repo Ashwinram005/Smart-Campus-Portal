@@ -62,7 +62,7 @@ function App() {
         }
       ></Route>
       <Route
-        path="/students"
+        path="/students/courses"
         element={
           <PrivateRoute>
             <Layout currentPageTitle="Event Management">
@@ -82,7 +82,7 @@ function App() {
         }
       ></Route>
       <Route
-        path="/students/announcements"
+        path="/students/events"
         element={
           <PrivateRoute>
             <Layout currentPageTitle="Student Placement">

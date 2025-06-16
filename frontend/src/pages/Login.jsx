@@ -9,8 +9,7 @@ import {
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import icon from "../assets/react.svg"; // Update this path if needed
 
-const BACKEND_URL = "http://localhost:5000/api";
-
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -76,7 +75,7 @@ export default function Login() {
 
         if (response.ok) {
           localStorage.setItem("token", data.token);
-         
+
           navigate("/dashboard");
         } else {
           setError(

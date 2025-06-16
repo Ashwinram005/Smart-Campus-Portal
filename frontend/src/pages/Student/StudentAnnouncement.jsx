@@ -50,8 +50,7 @@ const StudentAnnouncement = () => {
   const [filterType, setFilterType] = useState("all"); // 'all', 'academic', 'event', 'holiday', 'general'
 
   const token = localStorage.getItem("token");
-  const API_BASE_URL = "http://localhost:5000/api"; // Your backend API base URL
-
+  const API_BASE_URL = import.meta.env.VITE_BACKEND_URL; // Your backend API base URL
   useEffect(() => {
     if (token) {
       try {
@@ -134,7 +133,7 @@ const StudentAnnouncement = () => {
         return <CalendarDays className="w-5 h-5 mr-3 text-purple-600" />;
       case "holiday":
         return <CalendarDays className="w-5 h-5 mr-3 text-green-600" />;
-      case "general":
+      case "notice":
         return <MessageSquare className="w-5 h-5 mr-3 text-gray-600" />;
       default:
         return <BellRing className="w-5 h-5 mr-3 text-indigo-600" />;
@@ -221,8 +220,8 @@ const StudentAnnouncement = () => {
                 icon: <Gift className="w-4 h-4 mr-2" />,
               },
               {
-                label: "General",
-                type: "general",
+                label: "Notice",
+                type: "notice",
                 icon: <Info className="w-4 h-4 mr-2" />,
               },
             ].map((filter) => (

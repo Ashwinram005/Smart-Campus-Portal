@@ -43,7 +43,7 @@ const EventManagementFaculty = () => {
   const [error, setError] = useState(null);
 
   const token = localStorage.getItem("token");
-  const API_BASE_URL = "http://localhost:5000/api";
+  const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
   const [formAnnouncement, setFormAnnouncement] = useState({
     title: "",
@@ -503,8 +503,7 @@ const EventManagementFaculty = () => {
                   className="bg-white rounded-2xl p-6 border border-gray-100 shadow-lg hover:shadow-xl transition-all duration-300 relative group transform hover:-translate-y-1"
                 >
                   {/* Edit/Delete Buttons for authorized users */}
-                  {(userRole === "admin" ||
-                    (userRole === "faculty" )) && (
+                  {(userRole === "admin" || userRole === "faculty") && (
                     <div className="absolute top-4 right-4 flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                       <button
                         onClick={() => handleEditClick(announcement)}

@@ -76,8 +76,9 @@ import { twMerge } from "tailwind-merge";
  */
 
 // Cloudinary Configuration for Direct Unsigned Upload
-const CLOUDINARY_CLOUD_NAME = "dzeweglcv"; // REPLACE WITH YOUR CLOUD NAME
-const CLOUDINARY_UPLOAD_PRESET = "SmartcampusPortal"; // REPLACE WITH YOUR UNSIGNED UPLOAD PRESET NAME
+const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
+// REPLACE WITH YOUR UNSIGNED UPLOAD PRESET NAME
 // IMPORTANT: Ensure this preset is configured for "Unsigned" uploads in your Cloudinary dashboard.
 
 const StudentCourseManagement = () => {
@@ -107,7 +108,7 @@ const StudentCourseManagement = () => {
   const [allMySubmissions, setAllMySubmissions] = useState([]); // New state for all submissions data
 
   const token = localStorage.getItem("token");
-  const API_BASE_URL = "http://localhost:5000/api";
+  const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
   useEffect(() => {
     if (token) {
