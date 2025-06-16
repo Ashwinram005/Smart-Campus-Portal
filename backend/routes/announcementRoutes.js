@@ -18,7 +18,12 @@ router.post(
   createAnnouncement
 );
 
-router.get("/", protect, authorizeRoles("admin"), getAllAnnouncements);
+router.get(
+  "/",
+  protect,
+  authorizeRoles("admin", "faculty"),
+  getAllAnnouncements
+);
 
 router.get("/feed", protect, getUserRelevantAnnouncements);
 
