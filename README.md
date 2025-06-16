@@ -119,7 +119,7 @@ Smart-Campus-Portal/
 │ ├── package.json
 │ ├── package-lock.json
 │ ├── vite.config.js
-│ └── README.md
+├── README.md
 ```
 
 ## 📌 Notes
