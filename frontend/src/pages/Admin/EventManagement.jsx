@@ -83,7 +83,7 @@ const EventManagement = () => {
     try {
       const endpoint = showMyAnnouncements
         ? `${API_BASE_URL}/announcements` // Fetch only my announcements
-        : `${API_BASE_URL}/announcements/feed`; // Fetch all announcements (general feed)
+        : `${API_BASE_URL}/announcements/my`; // Fetch all announcements (general feed)
 
       const response = await fetch(endpoint, {
         method: "GET",
