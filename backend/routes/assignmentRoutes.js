@@ -25,10 +25,10 @@ router.post(
 );
 
 router.get(
-    "/submissions/mine",
-    protect,
-    authorizeRoles("student"),
-    getMySubmissions
+  "/submissions/mine",
+  protect,
+  authorizeRoles("student"),
+  getMySubmissions
 );
 router.get(
   "/:assignmentId/submissions",
@@ -38,9 +38,9 @@ router.get(
 );
 
 router.get(
-  '/:assignmentId/status',
+  "/:assignmentId/status",
   protect,
-  authorizeRoles('faculty'),
+  authorizeRoles("faculty"),
   getAssignmentSubmissionStatus
 );
 
