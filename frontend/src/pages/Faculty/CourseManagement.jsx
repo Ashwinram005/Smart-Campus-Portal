@@ -1,131 +1,20 @@
-// CourseManagement.js (Main Component)
 import React, { useState, useEffect, useCallback } from "react";
 import {
   Plus,
-  Edit,
-  Trash2,
-  X,
-  BookOpen,
-  Building,
-  Calendar,
-  Layers,
-  Repeat,
-  Download,
+  // No need for Edit, Trash2, X, BookOpen, Building, Calendar, Layers, Repeat, Download here
+  // as they are used only in CourseCard (now a separate component)
+  // and in the form (where X is used).
+  // Keep only the icons specifically used directly within CourseManagement, like Plus for "Add New Course".
+  X, // Keep X for the form close button
 } from "lucide-react";
 import { jwtDecode } from "jwt-decode";
 import toast, { Toaster } from "react-hot-toast";
 import { twMerge } from "tailwind-merge";
+import { useNavigate } from "react-router-dom";
+import CourseCard from "./CourseCard"; // <--- Correct import for CourseCard
 
-/**
- * @typedef {Object} Course
- * @property {string} _id - Unique identifier for the course
- * @property {string} courseCode - e.g., "CSE301"
- * @property {string} courseName - e.g., "Database Management Systems"
- * @property {string} department - e.g., "ECE", "CSE"
- * @property {number} year - e.g., 1, 2, 3, 4
- * @property {string} [description] - Optional course description
- * @property {string} createdBy - User ID who created the record
- * @property {string} createdByRole - Role of the user who created it (e.g., 'admin', 'faculty', 'student')
- * @property {string} createdAt - Timestamp of creation
- * @property {string} updatedAt - Timestamp of last update
- */
-
-// --- CourseCard Component (Inner Component) ---
-const CourseCard = ({
-  course,
-  userRole, // User role from token
-  userId, // User ID from token
-  handleFullEditClick,
-  handleEditCourseName,
-  handleSyncCourse,
-  handleDeleteCourse,
-  getDepartmentColor,
-}) => {
-  // Determine if the currently logged-in user (userRole) has permission to perform actions.
-  // Now explicitly checks if userRole is "faculty".
-  // You can refine this further if a faculty can only edit/delete their OWN courses,
-  // e.g., userRole === "faculty" && course.createdBy === userId
-  const canPerformActions = userRole === "faculty";
-
-  return (
-    // The 'group' class for Tailwind's group-hover utility
-    <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-lg hover:shadow-xl transition-all duration-300 relative group transform hover:-translate-y-1">
-      {/* Action Buttons Container - only visible to faculty on hover */}
-      {canPerformActions && (
-        <div className="absolute top-4 right-4 flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-          <button
-            onClick={() => handleFullEditClick(course)}
-            className="text-gray-500 hover:text-blue-600 bg-gray-100 hover:bg-blue-50 p-2 rounded-full transition-colors duration-200 shadow-sm"
-            title="Edit Full Course Details"
-          >
-            <Edit className="w-5 h-5" />
-          </button>
-          <button
-            onClick={() => handleEditCourseName(course._id)}
-            className="text-gray-500 hover:text-purple-600 bg-gray-100 hover:bg-purple-50 p-2 rounded-full transition-colors duration-200 shadow-sm"
-            title="Edit Course Name"
-          >
-            <BookOpen className="w-5 h-5" />
-          </button>
-          <button
-            onClick={() => handleSyncCourse(course._id)}
-            className="text-gray-500 hover:text-green-600 bg-gray-100 hover:bg-green-50 p-2 rounded-full transition-colors duration-200 shadow-sm"
-            title="Sync Course"
-          >
-            <Repeat className="w-5 h-5" />
-          </button>
-          <button
-            onClick={() => handleDeleteCourse(course._id)}
-            className="text-gray-500 hover:text-red-600 bg-gray-100 hover:bg-red-50 p-2 rounded-full transition-colors duration-200 shadow-sm"
-            title="Delete Course"
-          >
-            <Trash2 className="w-5 h-5" />
-          </button>
-        </div>
-      )}
-
-      <div className="flex items-start justify-between mb-4">
-        <h3 className="text-xl font-extrabold text-gray-900 line-clamp-2 pr-10">
-          {course.courseName}
-          <span className="block text-sm font-medium text-gray-500 mt-1">
-            ({course.courseCode})
-          </span>
-        </h3>
-      </div>
-
-      <div className="space-y-3 text-gray-700 text-sm">
-        <div className="flex items-center">
-          <Building className="w-4 h-4 mr-3 text-indigo-600" />
-          <span>
-            <span className="font-semibold">Department:</span>{" "}
-            <span
-              className={`px-2 py-0.5 rounded-full text-xs font-medium ${getDepartmentColor(
-                course.department
-              )}`}
-            >
-              {course.department}
-            </span>
-          </span>
-        </div>
-        <div className="flex items-center">
-          <Calendar className="w-4 h-4 mr-3 text-purple-600" />
-          <span>
-            <span className="font-semibold">Year:</span> {course.year}
-          </span>
-        </div>
-        {course.description && (
-          <div className="flex items-start">
-            <Layers className="w-4 h-4 mr-3 mt-1 text-teal-600 flex-shrink-0" />
-            <span>
-              <span className="font-semibold">Description:</span>{" "}
-              <p className="line-clamp-3">{course.description}</p>
-            </span>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
+// Removed the Course typedef and CourseCard definition from here.
+// They are now in CourseCard.js
 
 // --- Main CourseManagement Component ---
 const CourseManagement = () => {
@@ -134,13 +23,15 @@ const CourseManagement = () => {
   const [filterYear, setFilterYear] = useState("all");
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingCourse, setEditingCourse] = useState(null);
-  const [userRole, setUserRole] = useState("student"); // Initialize as "student"
+  const [userRole, setUserRole] = useState("student");
   const [userId, setUserId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   const token = localStorage.getItem("token");
   const API_BASE_URL = "http://localhost:5000/api";
+
+  const navigate = useNavigate();
 
   const [formCourse, setFormCourse] = useState({
     courseCode: "",
@@ -164,14 +55,10 @@ const CourseManagement = () => {
     setEditingCourse(null);
   }, []);
 
-  // Function to fetch course records - Modified to handle unauthorized access
   const fetchCourses = useCallback(async () => {
     setLoading(true);
-    setError(null); // Clear previous errors
+    setError(null);
     try {
-      // The endpoint should be `/courses/faculty` if only faculty-created courses are to be fetched
-      // or `/courses` if all courses are fetched but permissions are handled client-side.
-      // Based on your previous context, `/courses/faculty` was suggested.
       const response = await fetch(`${API_BASE_URL}/courses/faculty`, {
         method: "GET",
         headers: {
@@ -180,14 +67,13 @@ const CourseManagement = () => {
       });
 
       if (!response.ok) {
-        // Handle specific 403 Forbidden error for non-faculty trying to access `/faculty` endpoint
         if (response.status === 403) {
           setError("Access Denied: Only faculty can view these records.");
-          setCourses([]); // Clear any previous courses if access is denied
+          setCourses([]);
           toast.error(
             "Access Denied: You do not have permission to view faculty courses."
           );
-          return; // Exit early
+          return;
         }
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -210,7 +96,6 @@ const CourseManagement = () => {
       setUniqueYears(years);
     } catch (err) {
       console.error("Failed to fetch courses:", err);
-      // Only set generic error if it's not a 403 already handled
       if (!error) {
         setError(
           err.message || "Failed to load courses. Please try again later."
@@ -220,9 +105,8 @@ const CourseManagement = () => {
     } finally {
       setLoading(false);
     }
-  }, [token, API_BASE_URL]);
+  }, [token, API_BASE_URL, error]);
 
-  // Effect to decode token and set user role/ID
   useEffect(() => {
     if (token) {
       try {
@@ -234,15 +118,15 @@ const CourseManagement = () => {
           setUserId(id);
         } else {
           console.warn('JWT token found but no "role" property in payload.');
-          setUserRole("student"); // Default to student if no role is found
+          setUserRole("student");
         }
       } catch (error) {
         console.error("Failed to decode JWT token:", error);
-        localStorage.removeItem("token"); // Clear invalid token
-        setUserRole("student"); // Default to student on decode error
+        localStorage.removeItem("token");
+        setUserRole("student");
       }
     } else {
-      setUserRole("student"); // No token, set to default student
+      setUserRole("student");
     }
   }, [token]);
 
@@ -262,7 +146,6 @@ const CourseManagement = () => {
     e.preventDefault();
     setError(null);
 
-    // Ensure only faculty can submit forms
     if (userRole !== "faculty") {
       toast.error(
         "Permission Denied: Only faculty can create or update courses."
@@ -344,7 +227,6 @@ const CourseManagement = () => {
   };
 
   const handleEditCourseName = async (courseId) => {
-    // Ensure only faculty can perform this action
     if (userRole !== "faculty") {
       toast.error("Permission Denied: Only faculty can edit course names.");
       return;
@@ -396,7 +278,6 @@ const CourseManagement = () => {
   };
 
   const handleDeleteCourse = async (id) => {
-    // Ensure only faculty can perform this action
     if (userRole !== "faculty") {
       toast.error("Permission Denied: Only faculty can delete courses.");
       return;
@@ -471,7 +352,6 @@ const CourseManagement = () => {
   };
 
   const handleSyncCourse = async (courseId) => {
-    // Ensure only faculty can perform this action
     if (userRole !== "faculty") {
       toast.error("Permission Denied: Only faculty can sync courses.");
       return;
@@ -507,7 +387,6 @@ const CourseManagement = () => {
   };
 
   const handleFullEditClick = (course) => {
-    // Ensure only faculty can access the full edit form
     if (userRole !== "faculty") {
       toast.error(
         "Permission Denied: Only faculty can edit full course details."
@@ -528,6 +407,23 @@ const CourseManagement = () => {
   const handleCloseForm = () => {
     resetForm();
     setShowCreateForm(false);
+  };
+
+  const handleViewCourseDetails = (courseId) => {
+    // Find the full course object from your current 'courses' state
+    const selectedCourse = courses.find((c) => c._id === courseId);
+
+    if (selectedCourse) {
+      navigate(`/courses/${courseId}`, { state: { course: selectedCourse } });
+    } else {
+      toast.error("Course details not found in current list.");
+      console.error(
+        "Attempted to navigate to course details for an unknown ID:",
+        courseId
+      );
+      // You might still want to try fetching it if it's not in the list (e.g., filtered out)
+      // but for now, we'll assume it's always in 'courses' if displayed.
+    }
   };
 
   const displayedCourses = courses
@@ -582,13 +478,12 @@ const CourseManagement = () => {
           <p className="text-gray-600 mt-2 text-base sm:text-lg">
             Manage and view academic courses.
           </p>
-          {/* Display error if there is one and it's not loading */}
           {!loading && error && (
             <p className="text-red-600 mt-2 text-base font-semibold">{error}</p>
           )}
         </div>
         <div className="flex flex-col sm:flex-row gap-3">
-          {userRole === "faculty" && ( // Only faculty can add courses
+          {userRole === "faculty" && (
             <button
               onClick={() => {
                 resetForm();
@@ -602,7 +497,6 @@ const CourseManagement = () => {
               </span>
             </button>
           )}
-          {/* Export functionality placeholder - Only faculty can download */}
         </div>
       </div>
 
@@ -669,55 +563,51 @@ const CourseManagement = () => {
         </div>
       )}
 
-      {/* Conditional rendering for content based on loading and error states */}
-      {
-        !loading && !error ? (
-          <>
-            {/* Courses Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {displayedCourses.length > 0 ? (
-                displayedCourses.map((course) => (
-                  <CourseCard
-                    key={course._id}
-                    course={course}
-                    userRole={userRole}
-                    userId={userId}
-                    handleFullEditClick={handleFullEditClick}
-                    handleEditCourseName={handleEditCourseName}
-                    handleSyncCourse={handleSyncCourse}
-                    handleDeleteCourse={handleDeleteCourse}
-                    getDepartmentColor={getDepartmentColor}
-                  />
-                ))
-              ) : (
-                <div className="col-span-full text-center py-20 bg-white rounded-xl shadow-md p-6">
-                  <BookOpen className="w-20 h-20 text-gray-300 mx-auto mb-6" />
-                  <h3 className="text-2xl font-bold text-gray-700 mb-3">
-                    No Courses Found
-                  </h3>
-                  <p className="text-gray-500 text-lg">
-                    There are no courses matching your current filters. Try
-                    adjusting your selection or adding a new course.
-                  </p>
-                </div>
-              )}
-            </div>
-          </>
-        ) : !loading && error ? ( // Display error message when not loading but an error occurred
-          <div className="text-center py-20 bg-white rounded-xl shadow-md p-6">
-            <X className="w-20 h-20 text-red-400 mx-auto mb-6" />
-            <h3 className="text-2xl font-bold text-red-700 mb-3">
-              Error Loading Courses
-            </h3>
-            <p className="text-gray-500 text-lg">
-              {error}. Please ensure you have the correct permissions and are
-              logged in.
-            </p>
+      {!loading && !error ? (
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {displayedCourses.length > 0 ? (
+              displayedCourses.map((course) => (
+                <CourseCard
+                  key={course._id}
+                  course={course}
+                  userRole={userRole}
+                  userId={userId}
+                  handleFullEditClick={handleFullEditClick}
+                  handleEditCourseName={handleEditCourseName}
+                  handleSyncCourse={handleSyncCourse}
+                  handleDeleteCourse={handleDeleteCourse}
+                  getDepartmentColor={getDepartmentColor}
+                  onViewDetails={handleViewCourseDetails}
+                />
+              ))
+            ) : (
+              <div className="col-span-full text-center py-20 bg-white rounded-xl shadow-md p-6">
+                <BookOpen className="w-20 h-20 text-gray-300 mx-auto mb-6" />
+                <h3 className="text-2xl font-bold text-gray-700 mb-3">
+                  No Courses Found
+                </h3>
+                <p className="text-gray-500 text-lg">
+                  There are no courses matching your current filters. Try
+                  adjusting your selection or adding a new course.
+                </p>
+              </div>
+            )}
           </div>
-        ) : null /* Render nothing if still loading */
-      }
+        </>
+      ) : !loading && error ? (
+        <div className="text-center py-20 bg-white rounded-xl shadow-md p-6">
+          <X className="w-20 h-20 text-red-400 mx-auto mb-6" />
+          <h3 className="text-2xl font-bold text-red-700 mb-3">
+            Error Loading Courses
+          </h3>
+          <p className="text-gray-500 text-lg">
+            {error}. Please ensure you have the correct permissions and are
+            logged in.
+          </p>
+        </div>
+      ) : null}
 
-      {/* Create/Edit Course Modal */}
       {showCreateForm && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 z-[100]">
           <div className="bg-white rounded-2xl p-6 sm:p-8 w-full max-w-lg shadow-2xl relative animate-fade-in-up overflow-y-auto max-h-[90vh]">
@@ -748,7 +638,7 @@ const CourseManagement = () => {
                     value={formCourse.courseCode}
                     onChange={handleFormChange}
                     required
-                    disabled={!!editingCourse} // Typically, course codes are immutable
+                    disabled={!!editingCourse}
                   />
                 </div>
                 <div>
