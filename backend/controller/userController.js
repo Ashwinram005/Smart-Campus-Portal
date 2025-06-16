@@ -1,5 +1,6 @@
 const User = require("../model/User");
 const bcrypt = require("bcryptjs");
+const { Parser } = require("json2csv");
 
 // GET /api/users
 exports.getAllUsers = async (req, res) => {
@@ -10,6 +11,52 @@ exports.getAllUsers = async (req, res) => {
     res
       .status(500)
       .json({ message: "Error fetching users", error: err.message });
+  }
+};
+exports.downloadUsersCSV = async (req, res) => {
+  try {
+    // Fetch users
+    const users = await User.find().select(
+      "name email role department year studentId facultyId phone status createdAt"
+    );
+
+    // Convert to plain objects
+    const userData = users.map((user) => ({
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      department: user.department,
+      year: user.year || "",
+      studentId: user.studentId || "",
+      facultyId: user.facultyId || "",
+      phone: user.phone,
+      status: user.status,
+      createdAt: user.createdAt.toISOString(),
+    }));
+
+    // Define CSV fields
+    const fields = [
+      "name",
+      "email",
+      "role",
+      "department",
+      "year",
+      "studentId",
+      "facultyId",
+      "phone",
+      "status",
+      "createdAt",
+    ];
+    const parser = new Parser({ fields });
+    const csv = parser.parse(userData);
+
+    res.header("Content-Type", "text/csv");
+    res.attachment("users.csv");
+    return res.send(csv);
+  } catch (err) {
+    res
+      .status(500)
+      .json({ message: "CSV generation failed", error: err.message });
   }
 };
 
