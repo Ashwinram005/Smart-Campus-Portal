@@ -167,7 +167,7 @@ const StudentCourseManagement = () => {
       setError(null);
       try {
         const response = await fetch(`${API_BASE_URL}/materials/${courseId}`, {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: { Authorization:  `Bearer ${token}` },
         });
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -191,7 +191,7 @@ const StudentCourseManagement = () => {
     async (assignmentId) => {
       try {
         const response = await fetch(
-          `${API_BASE_URL}/assignments/submissions/mine`, // Your new endpoint
+          ` ${API_BASE_URL}/assignments/submissions/mine`, // Your new endpoint
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -210,8 +210,8 @@ const StudentCourseManagement = () => {
         return data; // Expected: CurrentUserSingleSubmission object
       } catch (err) {
         console.error(
-          `Failed to fetch my submission for ${assignmentId}:`,
-          err
+          `Failed to fetch my submission for ${assignmentId}:,
+          err`
         );
         return null;
       }
@@ -392,11 +392,11 @@ const StudentCourseManagement = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(
+        throw new Error(`
           errorData.error
             ? errorData.error.message
-            : `Cloudinary upload failed: ${response.status}`
-        );
+            : Cloudinary upload failed: ${response.status}
+        `);
       }
 
       const data = await response.json();
@@ -423,20 +423,23 @@ const StudentCourseManagement = () => {
     e.preventDefault();
     e.stopPropagation();
     if (!uploadingFile && !submittedFileUrl) {
-      e.currentTarget.classList.add("border-blue-500", "bg-blue-50");
+      // Changed blue-500, bg-blue-50 to custom green shades
+      e.currentTarget.classList.add("border-[#0c4511]", "bg-[#e0ffe0]");
     }
   };
 
   const handleDragLeave = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    e.currentTarget.classList.remove("border-blue-500", "bg-blue-50");
+    // Changed blue-500, bg-blue-50 to custom green shades
+    e.currentTarget.classList.remove("border-[#0c4511]", "bg-[#e0ffe0]");
   };
 
   const handleDrop = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    e.currentTarget.classList.remove("border-blue-500", "bg-blue-50");
+    // Changed blue-500, bg-blue-50 to custom green shades
+    e.currentTarget.classList.remove("border-[#0c4511]", "bg-[#e0ffe0]");
 
     if (
       e.dataTransfer.files &&
@@ -491,7 +494,7 @@ const StudentCourseManagement = () => {
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(
-          errorData.message || `Failed to submit assignment: ${response.status}`
+          `errorData.message || Failed to submit assignment: ${response.status}`
         );
       }
 
@@ -509,7 +512,7 @@ const StudentCourseManagement = () => {
 
           fileUrl: finalSubmissionContent,
           submittedAt: payload.submittedAt,
-          _id: "temp_submission_id_" + Date.now(), // Give a temporary ID for client-side mapping
+          id: "temp_submission_id" + Date.now(), // Give a temporary ID for client-side mapping
         },
       }));
       // Also update the allMySubmissions list for the new modal if it's open
@@ -525,7 +528,7 @@ const StudentCourseManagement = () => {
           },
           fileUrl: finalSubmissionContent,
           submittedAt: payload.submittedAt,
-          _id: "temp_submission_id_" + Date.now(), // Give a temporary ID for client-side mapping
+          id: "temp_submission_id" + Date.now(), // Give a temporary ID for client-side mapping
         };
         if (existingIndex > -1) {
           const updated = [...prev];
@@ -565,11 +568,14 @@ const StudentCourseManagement = () => {
   const getMaterialIcon = (type) => {
     switch (type) {
       case "video":
-        return <FileVideo className="w-5 h-5 mr-4 text-purple-600" />;
+        // Adjusted text-purple-600 to a green shade
+        return <FileVideo className="w-5 h-5 mr-4 text-[#0c4511]" />;
       case "doc":
-        return <FileDoc className="w-5 h-5 mr-4 text-blue-600" />;
+        // Adjusted text-blue-600 to a green shade
+        return <FileDoc className="w-5 h-5 mr-4 text-[#0c4511]" />;
       case "link":
-        return <Link className="w-5 h-5 mr-4 text-green-600" />;
+        // Adjusted text-green-600 to a different green shade if needed, or keep for links
+        return <Link className="w-5 h-5 mr-4 text-emerald-600" />;
       default:
         return <Paperclip className="w-5 h-5 mr-4 text-gray-600" />;
     }
@@ -596,7 +602,7 @@ const StudentCourseManagement = () => {
   }
 
   return (
-    <div className="p-4 sm:p-6 space-y-6 bg-gray-50 min-h-screen font-sans">
+    <div className="p-4 sm:p-6 space-y-6 bg-[#f7fff7] min-h-screen font-sans">
       <Toaster position="top-right" />
 
       <div className="pb-4 border-b border-gray-200 flex justify-between items-center">
@@ -608,7 +614,8 @@ const StudentCourseManagement = () => {
         {/* NEW: My Submissions Button */}
         <button
           onClick={handleOpenMySubmissionsModal}
-          className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors duration-200 shadow-md transform hover:scale-105"
+          // Changed bg-indigo-600, hover:bg-indigo-700
+          className="inline-flex items-center px-4 py-2 bg-[#0c4511] text-white font-medium rounded-lg hover:bg-[#0a130f] transition-colors duration-200 shadow-md transform hover:scale-105"
         >
           <Eye className="w-5 h-5 mr-2" />
           My Submissions
@@ -620,7 +627,8 @@ const StudentCourseManagement = () => {
 
       {loading && (
         <div className="text-center py-16">
-          <Loader2 className="animate-spin h-12 w-12 text-blue-600 mx-auto mb-4" />
+          {/* Changed text-blue-600 to a green shade */}
+          <Loader2 className="animate-spin h-12 w-12 text-[#0c4511] mx-auto mb-4" />
           <p className="mt-4 text-xl font-medium text-gray-700">
             Loading your courses...
           </p>
@@ -637,7 +645,8 @@ const StudentCourseManagement = () => {
                   className="bg-white rounded-2xl p-6 border border-gray-100 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
                 >
                   <div className="flex items-center mb-3">
-                    <BookOpen className="w-6 h-6 text-indigo-600 mr-3" />
+                    {/* Changed text-indigo-600 to a green shade */}
+                    <BookOpen className="w-6 h-6 text-[#0c4511] mr-3" />
                     <h3 className="text-xl font-extrabold text-gray-900">
                       {course.courseName || course.title}{" "}
                     </h3>
@@ -650,21 +659,24 @@ const StudentCourseManagement = () => {
                   </p>
                   <div className="text-gray-700 text-sm space-y-2">
                     <div className="flex items-center">
-                      <User className="w-4 h-4 mr-2 text-blue-500" />
+                      {/* Changed text-blue-500 to a green shade */}
+                      <User className="w-4 h-4 mr-2 text-emerald-500" />
                       <span>{course.year || "N/A"}</span>
                     </div>
                   </div>
                   <div className="mt-6 flex flex-col sm:flex-row gap-3">
                     <button
                       onClick={() => handleViewMaterials(course)}
-                      className="flex-1 inline-flex items-center justify-center px-4 py-2 bg-purple-500 text-white font-medium rounded-lg hover:bg-purple-600 transition-colors duration-200 shadow-md transform hover:scale-105"
+                      // Changed bg-purple-500, hover:bg-purple-600 to green shades
+                      className="flex-1 inline-flex items-center justify-center px-4 py-2 bg-[#0c4511] text-white font-medium rounded-lg hover:bg-[#0a130f] transition-colors duration-200 shadow-md transform hover:scale-105"
                     >
                       <Paperclip className="w-5 h-5 mr-2" />
                       View Materials
                     </button>
                     <button
                       onClick={() => handleViewAssignments(course)}
-                      className="flex-1 inline-flex items-center justify-center px-4 py-2 bg-blue-500 text-white font-medium rounded-lg hover:bg-blue-600 transition-colors duration-200 shadow-md transform hover:scale-105"
+                      // Changed bg-blue-500, hover:bg-blue-600 to green shades
+                      className="flex-1 inline-flex items-center justify-center px-4 py-2 bg-[#0c4511] text-white font-medium rounded-lg hover:bg-[#0a130f] transition-colors duration-200 shadow-md transform hover:scale-105"
                     >
                       <ClipboardList className="w-5 h-5 mr-2" />
                       View Assignments
@@ -704,7 +716,8 @@ const StudentCourseManagement = () => {
             </h2>
             {loading ? (
               <div className="text-center py-8">
-                <Loader2 className="animate-spin h-8 w-8 text-blue-600 mx-auto mb-2" />
+                {/* Changed text-blue-600 to a green shade */}
+                <Loader2 className="animate-spin h-8 w-8 text-[#0c4511] mx-auto mb-2" />
                 <p className="text-gray-600">Loading materials...</p>
               </div>
             ) : selectedCourseMaterials.length > 0 ? (
@@ -727,7 +740,8 @@ const StudentCourseManagement = () => {
                           href={material.fileUrl || material.content}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center text-blue-600 hover:text-blue-800 hover:underline text-sm font-medium"
+                          // Changed text-blue-600, hover:text-blue-800 to green shades
+                          className="inline-flex items-center text-[#0c4511] hover:text-[#0a130f] hover:underline text-sm font-medium"
                         >
                           {material.type === "video" && "Watch Video"}
                           {material.type === "doc" && "View Document"}
@@ -777,7 +791,8 @@ const StudentCourseManagement = () => {
             </h2>
             {loading ? (
               <div className="text-center py-8">
-                <Loader2 className="animate-spin h-8 w-8 text-blue-600 mx-auto mb-2" />
+                {/* Changed text-blue-600 to a green shade */}
+                <Loader2 className="animate-spin h-8 w-8 text-[#0c4511] mx-auto mb-2" />
                 <p className="text-gray-600">Loading assignments...</p>
               </div>
             ) : selectedCourseAssignments.length > 0 ? (
@@ -796,6 +811,7 @@ const StudentCourseManagement = () => {
 
                   const submissionStatusClasses = twMerge(
                     "px-3 py-1 rounded-full text-xs font-semibold border inline-flex items-center",
+                    // Kept green for completed, red for pending as these are standard status colors
                     hasSubmitted
                       ? "bg-green-100 text-green-800 border-green-200"
                       : "bg-red-100 text-red-800 border-red-200"
@@ -842,8 +858,10 @@ const StudentCourseManagement = () => {
                           className={twMerge(
                             "inline-flex items-center px-4 py-2 rounded-lg font-medium shadow-md transition-colors duration-200",
                             hasSubmitted
-                              ? "bg-yellow-500 hover:bg-yellow-600 text-white cursor-not-allowed"
-                              : "bg-blue-600 hover:bg-blue-700 text-white"
+                              ? // Adjusted bg-yellow-500 to a green shade for submitted state
+                                "bg-[#a3ccaa] hover:bg-[#7aa081] text-white cursor-not-allowed"
+                              : // Adjusted bg-blue-600, hover:bg-blue-700 to green shades
+                                "bg-[#0c4511] hover:bg-[#0a130f] text-white"
                           )}
                         >
                           <Send className="w-4 h-4 mr-2" />
@@ -882,7 +900,8 @@ const StudentCourseManagement = () => {
             </h2>
             {loading ? (
               <div className="text-center py-8">
-                <Loader2 className="animate-spin h-8 w-8 text-blue-600 mx-auto mb-2" />
+                {/* Changed text-blue-600 to a green shade */}
+                <Loader2 className="animate-spin h-8 w-8 text-[#0c4511] mx-auto mb-2" />
                 <p className="text-gray-600">Loading your submissions...</p>
               </div>
             ) : allMySubmissions.length > 0 ? (
@@ -893,7 +912,8 @@ const StudentCourseManagement = () => {
                     className="p-5 bg-gray-50 rounded-lg border border-gray-200 shadow-sm"
                   >
                     <div className="flex items-start mb-3">
-                      <ClipboardList className="w-5 h-5 mr-3 text-blue-600" />
+                      {/* Changed text-blue-600 to a green shade */}
+                      <ClipboardList className="w-5 h-5 mr-3 text-[#0c4511]" />
                       <div className="flex-1">
                         <h3 className="font-extrabold text-lg text-gray-900">
                           {submission.assignment.title}{" "}
@@ -910,7 +930,8 @@ const StudentCourseManagement = () => {
                             href={submission.fileUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center text-blue-600 hover:underline text-sm font-medium mt-2"
+                            // Changed text-blue-600 to a green shade
+                            className="inline-flex items-center text-[#0c4511] hover:underline text-sm font-medium mt-2"
                           >
                             <Paperclip className="w-4 h-4 mr-2" />
                             View Submitted File
@@ -970,8 +991,9 @@ const StudentCourseManagement = () => {
                   "flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 rounded-lg text-center transition-all duration-200",
                   (uploadingFile || submittedFileUrl) &&
                     "opacity-70 cursor-not-allowed",
+                  // Changed bg-blue-50 to a light green shade for hover effect
                   !(uploadingFile || submittedFileUrl) &&
-                    "bg-gray-50 hover:bg-gray-100"
+                    "bg-[#f7fff7] hover:bg-[#e0ffe0]"
                 )}
               >
                 {!uploadingFile && !submittedFileUrl && (
@@ -984,7 +1006,8 @@ const StudentCourseManagement = () => {
                     <button
                       type="button"
                       onClick={handleBrowseClick}
-                      className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+                      // Changed bg-blue-500, hover:bg-blue-600 to green shades
+                      className="px-4 py-2 bg-[#0c4511] text-white rounded-md hover:bg-[#0a130f] transition-colors"
                       disabled={uploadingFile || !!submittedFileUrl}
                     >
                       Browse Files
@@ -993,7 +1016,8 @@ const StudentCourseManagement = () => {
                 )}
                 {uploadingFile && (
                   <div className="flex flex-col items-center">
-                    <Loader2 className="animate-spin h-8 w-8 text-blue-600 mb-3" />
+                    {/* Changed text-blue-600 to a green shade */}
+                    <Loader2 className="animate-spin h-8 w-8 text-[#0c4511] mb-3" />
                     <p className="text-gray-700 font-medium">
                       Uploading file...
                     </p>
@@ -1031,7 +1055,7 @@ const StudentCourseManagement = () => {
                   className="hidden"
                   onChange={(e) => handleFileChange(e.target.files[0])}
                   disabled={uploadingFile || !!submittedFileUrl}
-                  accept="image/*,video/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                  accept="image/,video/,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                 />
               </div>
 
@@ -1053,7 +1077,10 @@ const StudentCourseManagement = () => {
                 <textarea
                   id="submissionContent"
                   rows="6"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-gray-900 placeholder-gray-400"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2
+                  // Changed focus:ring-blue-500, focus:border-blue-500 to green shades
+                  focus:ring-[#0c4511] focus:border-[#0c4511]
+                  transition-colors text-gray-900 placeholder-gray-400"
                   placeholder="Type or paste your assignment content here..."
                   value={submissionContent}
                   onChange={(e) => {
@@ -1084,7 +1111,8 @@ const StudentCourseManagement = () => {
                     uploadingFile ||
                     (!submissionContent.trim() && !submittedFileUrl)
                   }
-                  className="inline-flex items-center bg-blue-600 text-white px-5 py-2.5 rounded-lg font-medium hover:bg-blue-700 transition-colors duration-200 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                  // Changed bg-blue-600, hover:bg-blue-700 to green shades
+                  className="inline-flex items-center bg-[#0c4511] text-white px-5 py-2.5 rounded-lg font-medium hover:bg-[#0a130f] transition-colors duration-200 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {(loading || uploadingFile) && (
                     <Loader2 className="w-5 h-5 mr-2 animate-spin" />

@@ -16,7 +16,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 
 import MenuIcon from "../assets/Dashboard/MenuIcon.png";
-import logoIcon from "../assets/logo.png"; // Assuming you have a proper logo
+import logoIcon from "../assets/react.svg"; // Assuming you have a proper logo
 
 const ROLES = {
   ADMIN: "admin",
@@ -129,11 +129,11 @@ const Layout = ({ children, currentPageTitle = "Dashboard" }) => {
   });
 
   const handleLogout = () => {
-    console.log("User logging out...");
+   
     localStorage.removeItem("token");
     navigate("/");
     setShowLogoutModal(false);
-    alert("You have been logged out."); // Consider a toast instead for better UX
+     // Consider a toast instead for better UX
   };
 
   return (
@@ -147,7 +147,7 @@ const Layout = ({ children, currentPageTitle = "Dashboard" }) => {
               className="mr-3 h-9 w-9 text-[#00FFA5] filter drop-shadow-[0_0_8px_rgba(0,255,165,0.4)] md:h-10 md:w-10"
             />
             <h1 className="hidden text-2xl font-bold text-white md:block">
-              Pulse
+              Smart
             </h1>
             <Menu className="block h-7 w-7 cursor-pointer text-gray-400 md:hidden" />
           </div>
