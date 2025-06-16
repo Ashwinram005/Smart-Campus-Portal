@@ -93,20 +93,35 @@ To log in as an Admin for the first time, use the credentials below:
 ## 📁 Project Structure
 
 ```
+## 📁 Project Structure
+
 Smart-Campus-Portal/
 ├── backend/
-│   ├── models/
-│   ├── controllers/
-│   ├── routes/
-│   ├── middleware/
-│   ├── config/
-│   └── index.js
+│ ├── config/
+│ ├── controllers/
+│ ├── middleware/
+│ ├── models/
+│ ├── routes/
+│ ├── .env
+│ ├── .gitignore
+│ ├── index.js
+│ ├── package.json
+│ └── package-lock.json
 ├── frontend/
-│   ├── components/
-│   ├── pages/
-│   ├── utils/
-│   ├── App.jsx
-│   └── main.jsx
+│ ├── public/
+│ ├── src/
+│ │ ├── assets/
+│ │ ├── components/
+│ │ ├── pages/
+│ │ ├── App.jsx
+│ │ └── main.jsx
+│ ├── .gitignore
+│ ├── index.html
+│ ├── eslint.config.js
+│ ├── package.json
+│ ├── package-lock.json
+│ ├── vite.config.js
+│ └── README.md
 ```
 
 ## 📌 Notes
