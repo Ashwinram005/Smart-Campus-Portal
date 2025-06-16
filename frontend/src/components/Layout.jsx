@@ -58,25 +58,25 @@ const sideMenu = [
   },
   {
     icon: MessageSquareHeart,
-    label: "My Events (Faculty)",
+    label: "My Events ",
     path: "/faculty/events",
     roles: [ROLES.FACULTY],
   },
   {
     icon: Award,
-    label: "My Courses (Student)",
+    label: "My Courses",
     path: "/students/courses",
     roles: [ROLES.STUDENT],
   },
   {
     icon: BarChart2,
-    label: "My Placements (Student)",
+    label: "My Placements",
     path: "/students/placements",
     roles: [ROLES.STUDENT],
   },
   {
     icon: CalendarDays,
-    label: "My Events (Student)",
+    label: "My Events",
     path: "/students/events",
     roles: [ROLES.STUDENT],
   },
@@ -129,11 +129,10 @@ const Layout = ({ children, currentPageTitle = "Dashboard" }) => {
   });
 
   const handleLogout = () => {
-   
     localStorage.removeItem("token");
     navigate("/");
     setShowLogoutModal(false);
-     // Consider a toast instead for better UX
+    // Consider a toast instead for better UX
   };
 
   return (
