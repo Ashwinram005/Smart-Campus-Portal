@@ -113,6 +113,7 @@ Smart-Campus-Portal/
 │ │ ├── pages/
 │ │ ├── App.jsx
 │ │ └── main.jsx
+│ ├── .env
 │ ├── .gitignore
 │ ├── index.html
 │ ├── eslint.config.js
