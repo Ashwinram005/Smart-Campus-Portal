@@ -1,5 +1,5 @@
 // src/components/UserManagement.jsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import {
   Users,
@@ -17,6 +17,7 @@ import {
   Shield,
   MoreVertical,
   Phone,
+  Download as DownloadIcon, // Renamed to avoid conflict with `Download` type from lucide-react
 } from "lucide-react";
 
 /**
@@ -80,8 +81,9 @@ const UserManagement = ({ users: initialUsers, onUserUpdate }) => {
     if (token) {
       try {
         // Basic JWT decoding - consider a library like 'jwt-decode' for production
-        const payload = JSON.parse(atob(token.split(".")[1]));
-        setLoggedInUserId(payload._id || payload.id); // Use _id or id based on your token structure
+        // Using jwt-decode for robustness
+        const decodedToken = jwtDecode(token);
+        setLoggedInUserId(decodedToken._id || decodedToken.id); // Use _id or id based on your token structure
       } catch (e) {
         console.error("Error decoding token:", e);
         // Handle invalid token scenario, e.g., redirect to login
@@ -91,9 +93,10 @@ const UserManagement = ({ users: initialUsers, onUserUpdate }) => {
       setLoggedInUserId(null); // Clear ID if no token
     }
     fetchUsers(); // Fetch users when token/loggedInUserId might have changed
-  }, [token]); // Re-run when 'token' changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]); // Re-run when 'token' changes, but fetchUsers is also a dep.
 
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       const response = await fetch(`http://localhost:5000/api/users`, {
         method: "GET",
@@ -119,7 +122,7 @@ const UserManagement = ({ users: initialUsers, onUserUpdate }) => {
       toast.error(`Error fetching users: ${error.message}`);
       console.error("Error fetching users:", error);
     }
-  };
+  }, [token]); // Add token to useCallback dependencies
 
   const isIdTaken = (id, type) => {
     // Check against existing users in the list AND the logged-in user's ID
@@ -307,6 +310,7 @@ const UserManagement = ({ users: initialUsers, onUserUpdate }) => {
       createdAt: new Date().toISOString(),
     };
 
+    // Clean up unnecessary fields based on role before sending to backend
     if (userToCreate.role === "student") {
       delete userToCreate.facultyId;
     } else if (userToCreate.role === "faculty") {
@@ -316,6 +320,7 @@ const UserManagement = ({ users: initialUsers, onUserUpdate }) => {
       delete userToCreate.studentId;
       delete userToCreate.facultyId;
       delete userToCreate.year;
+      delete userToCreate.department; // Admins typically don't have a department
     }
 
     try {
@@ -332,7 +337,10 @@ const UserManagement = ({ users: initialUsers, onUserUpdate }) => {
           loading: "Creating user...",
           success: (response) => {
             if (!response.ok) {
-              throw new Error(response.statusText);
+              // Extract error message from response if available
+              return response.json().then((errData) => {
+                throw new Error(errData.message || response.statusText);
+              });
             }
             return "User created successfully!";
           },
@@ -342,8 +350,9 @@ const UserManagement = ({ users: initialUsers, onUserUpdate }) => {
       );
 
       if (res.ok) {
+        // Only parse JSON if the response is successful
         const createdUser = await res.json();
-        setUsers((prevUsers) => [...prevUsers, createdUser]);
+        setUsers((prevUsers) => [...prevUsers, createdUser.user]); // Assuming backend returns { user: ... }
         setNewUser({
           name: "",
           email: "",
@@ -358,7 +367,8 @@ const UserManagement = ({ users: initialUsers, onUserUpdate }) => {
         });
         setShowCreateModal(false);
       } else {
-        const errorData = await res.json();
+        // Error handling already done by toast.promise, but log for debugging
+        const errorData = await res.json(); // Need to await json() here if not using .then() in toast.promise
         console.error("Failed to create user:", errorData.message);
       }
     } catch (error) {
@@ -390,7 +400,9 @@ const UserManagement = ({ users: initialUsers, onUserUpdate }) => {
           loading: "Updating user...",
           success: (response) => {
             if (!response.ok) {
-              throw new Error(response.statusText);
+              return response.json().then((errData) => {
+                throw new Error(errData.message || response.statusText);
+              });
             }
             return "User updated successfully!";
           },
@@ -431,7 +443,9 @@ const UserManagement = ({ users: initialUsers, onUserUpdate }) => {
             loading: "Deleting user...",
             success: (response) => {
               if (!response.ok) {
-                throw new Error(response.statusText);
+                return response.json().then((errData) => {
+                  throw new Error(errData.message || response.statusText);
+                });
               }
               return "User deleted successfully!";
             },
@@ -478,7 +492,9 @@ const UserManagement = ({ users: initialUsers, onUserUpdate }) => {
           loading: "Updating status...",
           success: (response) => {
             if (!response.ok) {
-              throw new Error(response.statusText);
+              return response.json().then((errData) => {
+                throw new Error(errData.message || response.statusText);
+              });
             }
             return `User status changed to ${newStatus}.`;
           },
@@ -501,6 +517,74 @@ const UserManagement = ({ users: initialUsers, onUserUpdate }) => {
       console.error("Error toggling user status:", error);
     }
   };
+
+  // --- CSV Export Logic ---
+  const exportUsersToCsv = () => {
+    if (!users.length) {
+      toast.error("No users to export.");
+      return;
+    }
+
+    const headers = [
+      "Name",
+      "Email",
+      "Role",
+      "Department",
+      "Student ID",
+      "Faculty ID",
+      "Admission Year",
+      "Academic Year",
+      "Phone",
+      "Status",
+      "Created At",
+    ];
+
+    // Map user data to CSV rows
+    const rows = users.map((user) => {
+      const rowData = [
+        user.name || "",
+        user.email || "",
+        user.role || "",
+        user.department || "",
+        user.studentId || "",
+        user.facultyId || "",
+        user.year || "",
+        getAcademicYearDisplay(user.year),
+        user.phone || "",
+        user.status || "",
+        user.createdAt ? new Date(user.createdAt).toLocaleDateString() : "", // Format date
+      ];
+      // Escape commas and wrap in quotes if necessary for CSV format
+      return rowData
+        .map((field) => {
+          if (
+            typeof field === "string" &&
+            (field.includes(",") || field.includes("\n"))
+          ) {
+            return `"${field.replace(/"/g, '""')}"`; // Escape double quotes
+          }
+          return field;
+        })
+        .join(",");
+    });
+
+    const csvContent = [headers.join(","), ...rows].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute(
+      "download",
+      `users_export_${new Date().toISOString().split("T")[0]}.csv`
+    );
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url); // Clean up the URL object
+    toast.success("Users exported successfully to CSV!");
+  };
+  // --- End CSV Export Logic ---
 
   const getRoleIcon = (role) => {
     switch (role) {
@@ -553,13 +637,24 @@ const UserManagement = ({ users: initialUsers, onUserUpdate }) => {
             Manage system users, roles, and permissions.
           </p>
         </div>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="flex items-center space-x-2 rounded-lg bg-gradient-to-r from-blue-600 to-emerald-600 px-4 py-2 font-medium text-white shadow-lg transition-all duration-200 hover:from-blue-700 hover:to-emerald-700"
-        >
-          <Plus className="h-4 w-4" />
-          <span>Add User</span>
-        </button>
+        <div className="flex space-x-3">
+          {" "}
+          {/* Container for buttons */}
+          <button
+            onClick={exportUsersToCsv}
+            className="flex items-center space-x-2 rounded-lg bg-gradient-to-r from-teal-600 to-cyan-600 px-4 py-2 font-medium text-white shadow-lg transition-all duration-200 hover:from-teal-700 hover:to-cyan-700"
+          >
+            <DownloadIcon className="h-4 w-4" />
+            <span>Export CSV</span>
+          </button>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="flex items-center space-x-2 rounded-lg bg-gradient-to-r from-blue-600 to-emerald-600 px-4 py-2 font-medium text-white shadow-lg transition-all duration-200 hover:from-blue-700 hover:to-emerald-700"
+          >
+            <Plus className="h-4 w-4" />
+            <span>Add User</span>
+          </button>
+        </div>
       </div>
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-6">
@@ -896,6 +991,9 @@ const UserManagement = ({ users: initialUsers, onUserUpdate }) => {
                         if (newRole !== "faculty") {
                           updatedUser.facultyId = "";
                         }
+                        if (newRole !== "admin") {
+                          updatedUser.department = ""; // Clear department if not admin for new user
+                        }
                         return updatedUser;
                       });
                     }}
@@ -908,20 +1006,22 @@ const UserManagement = ({ users: initialUsers, onUserUpdate }) => {
                   </select>
                 </div>
 
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-300">
-                    Department
-                  </label>
-                  <input
-                    type="text"
-                    value={newUser.department}
-                    onChange={(e) =>
-                      setNewUser({ ...newUser, department: e.target.value })
-                    }
-                    className="w-full rounded-lg border border-[#1f2d23] bg-transparent px-4 py-3 text-white transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-blue-500"
-                    placeholder="Enter department"
-                  />
-                </div>
+                {newUser.role !== "admin" && ( // Department input only for student/faculty
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-gray-300">
+                      Department
+                    </label>
+                    <input
+                      type="text"
+                      value={newUser.department}
+                      onChange={(e) =>
+                        setNewUser({ ...newUser, department: e.target.value })
+                      }
+                      className="w-full rounded-lg border border-[#1f2d23] bg-transparent px-4 py-3 text-white transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-blue-500"
+                      placeholder="Enter department"
+                    />
+                  </div>
+                )}
 
                 {newUser.role === "student" && (
                   <>
@@ -1226,7 +1326,7 @@ const UserManagement = ({ users: initialUsers, onUserUpdate }) => {
                 onClick={() => setShowViewModal(false)}
                 className="text-gray-400 transition-colors hover:text-gray-200"
               >
-                <MoreVertical className="h-6 w-6" />
+                <X className="h-6 w-6" /> {/* Changed to X for close button */}
               </button>
             </div>
 

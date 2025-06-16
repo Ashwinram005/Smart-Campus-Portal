@@ -579,17 +579,7 @@ const PlacementManagement = () => {
         </div>
       )}
 
-      {error && (
-        <div
-          className="bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg shadow-md relative"
-          role="alert"
-        >
-          <strong className="font-bold">Error!</strong>
-          <span className="block sm:inline ml-2">{error}</span>
-        </div>
-      )}
-
-      {!loading && !error && (
+      {!loading  && (
         <>
           {/* Placements Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
