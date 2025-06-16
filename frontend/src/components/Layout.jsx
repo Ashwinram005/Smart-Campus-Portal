@@ -40,7 +40,7 @@ const sideMenu = [
   { icon: MyRepoIcon, label: "Users", path: "/user" },
   { icon: MyContentIcon, label: "Events", path: "/events" },
   { icon: MyBlogsIcon, label: "Placements", path: "/placements" },
-  { icon: TeamsIcon, label: "Teams", path: "/teams" },
+  { icon: TeamsIcon, label: "Courses", path: "/courses" },
   { icon: ChallengesIcon, label: "Challenges", path: "/challenges" },
   { icon: AnalyticsIcon, label: "Analytics", path: "/analytics" },
   { icon: SubscriptionsIcon, label: "Subscriptions", path: "/subscriptions" },

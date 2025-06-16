@@ -9,6 +9,7 @@ import Layout from "./components/Layout";
 import PrivateRoute from "./components/PrivateRoute";
 import EventManagement from "./pages/Admin/EventManagement";
 import PlacementManagement from "./pages/Admin/PlacementManagement";
+import CourseManagement from "./pages/Faculty/CourseManagement";
 
 function App() {
   const [appUsers, setAppUsers] = useState([]); // Initialize with an empty array or fetch data
@@ -33,20 +34,36 @@ function App() {
           </PrivateRoute>
         }
       />
-      <Route path="/events" element={
-        <PrivateRoute>
-          <Layout currentPageTitle="Event Management">
-            <EventManagement/>
-          </Layout>
-        </PrivateRoute>
-      }></Route>
-      <Route path="/placements" element={
-        <PrivateRoute>
-          <Layout currentPageTitle="Placement Management">
-            <PlacementManagement/>
-          </Layout>
-        </PrivateRoute>
-      }></Route>
+      <Route
+        path="/events"
+        element={
+          <PrivateRoute>
+            <Layout currentPageTitle="Event Management">
+              <EventManagement />
+            </Layout>
+          </PrivateRoute>
+        }
+      ></Route>
+      <Route
+        path="/placements"
+        element={
+          <PrivateRoute>
+            <Layout currentPageTitle="Placement Management">
+              <PlacementManagement />
+            </Layout>
+          </PrivateRoute>
+        }
+      ></Route>
+      <Route
+        path="/courses"
+        element={
+          <PrivateRoute>
+            <Layout currentPageTitle="Course Management">
+              <CourseManagement />
+            </Layout>
+          </PrivateRoute>
+        }
+      ></Route>
 
       <Route
         path="/user"
