@@ -85,8 +85,8 @@ npm run dev
 
 To log in as an Admin for the first time, use the credentials below:
 
-📧 **Email**: `admin@example.com`  
-🔑 **Password**: `admin123`  
+📧 **Email**: `admin1@example.com`  
+🔑 **Password**: `adminpass`  
 ⚠️ This Admin account is pre-inserted into the MongoDB database during initial setup using a securely hashed password.  
 ✅ After logging in, the Admin can create additional Admin, Faculty, or Student accounts through the web interface.  
 
