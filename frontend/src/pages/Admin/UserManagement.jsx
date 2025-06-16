@@ -94,8 +94,9 @@ const UserManagement = ({ users: initialUsers, onUserUpdate }) => {
     }
     fetchUsers(); // Fetch users when token/loggedInUserId might have changed
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token]); // Re-run when 'token' changes, but fetchUsers is also a dep.
-
+  }, [token]); // Re-
+  // run when 'token' changes, but fetchUsers is also a dep.
+  console.log("hello")
   const fetchUsers = useCallback(async () => {
     try {
       const response = await fetch(`http://localhost:5000/api/users`, {
