@@ -42,6 +42,7 @@ npm run dev
 ```bash
 cd frontend
 npm install
+# Configure `.env` file
 npm run dev
 ```
 
@@ -72,8 +73,8 @@ frontend/
   components/
   pages/
   utils/
-  App.tsx
-  main.tsx
+  App.jsx
+  main.jsx
 ```
 
 ---
