@@ -86,8 +86,7 @@ frontend/
 ### 1. Clone Repository
 
 ```bash
-git clone https://github.com/your-team/smart-campus-portal.git
-cd smart-campus-portal
+git clone (https://github.com/Ashwinram005/Smart-Campus-Portal.git)
 ```
 
 ### 2. Setup Backend
@@ -117,19 +116,6 @@ MONGO_URI=your_mongo_db_url
 JWT_SECRET=your_secret_key
 JWT_EXPIRES_IN=1d
 ```
-
----
-
-## 🧪 Testing APIs
-
-Use Postman or Thunder Client:
-
-* Register/Login
-* Create announcement
-* Create placement
-* Create course & assignment
-
----
 
 ## 📝 Additional Notes
 
