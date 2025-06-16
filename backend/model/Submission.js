@@ -17,7 +17,7 @@ const submissionSchema = new mongoose.Schema(
       default: Date.now,
     },
     fileUrl: {
-      type: String, // frontend should upload to cloud and provide URL
+      type: String,
       required: true,
     },
   },

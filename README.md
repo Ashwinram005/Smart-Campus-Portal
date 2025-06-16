@@ -1,4 +1,4 @@
-# Smart Campus Portal 
+# Smart Campus Portal
 
 ## 🧠 Overview
 
@@ -6,58 +6,56 @@ Smart Campus Portal is a full-stack web application built during the "MERN Maver
 
 ## 🧩 Tech Stack
 
-* **Frontend**: React.js, TypeScript, Tailwind CSS
+* **Frontend**: React.js, JavaScript, Tailwind CSS
 * **Backend**: Node.js, Express.js
 * **Database**: MongoDB (Mongoose ODM)
 * **Authentication**: JWT-based with role-based access control
+* **Cloudinary**: Used for managing uploaded media (assignments, materials)
 
 ## 🔐 Roles Supported
 
-* **Admin**: Full access to manage users, announcements, placements, courses.
-* **Faculty**: Manage courses, assignments, materials.
-* **Student**: View courses, announcements, submit assignments.
+* **Admin**: Full access to manage users, announcements, placements, and oversee platform-wide data.
+* **Faculty**: Manage announcements, courses, upload materials, post assignments, and view student submissions.
+* **Student**: View enrolled courses, get announcements, and submit assignments.
 
 ---
 
-## 🚀 Features
+## 🛠️ Setup Instructions
 
-### 👤 User Management (Admin Panel)
+### 1. Clone Repository
 
-* Add/edit/delete users (students/faculty/admin)
-* Role-based access
-* Filters by role, status, department
+```bash
+git clone https://github.com/Ashwinram005/Smart-Campus-Portal.git
+```
 
-### 📢 Announcements & Events (Admin/Faculty)
+### 2. Setup Backend
 
-* Post by category: `academic`, `event`, `notice`, `holiday`
-* Targeted audience (all/students/faculty)
-* Tags: department, year
-* Students see personalized feed
+```bash
+cd backend
+npm install
+# Configure `.env` file
+npm run dev
+```
 
-### 🎯 Placement Tracking (Admin)
+### 3. Setup Frontend
 
-* Upload student-wise placement data
-* Company, role, package, location
-* Validates against student records
-* Downloadable CSV
-* Stats: Top offers, total placed, average package
+```bash
+cd frontend
+npm install
+# Configure `.env` file
+npm run dev
+```
 
-### 📚 Course Management (Faculty)
+### 4. Environment Variables
 
-* Create courses by department & year
-* Auto-enroll students
-* Edit/delete/sync enrolled students
+Backend `.env`:
 
-### 📁 Course Materials (Faculty)
-
-* Upload materials (link, PDF, docs)
-* Organized per course
-
-### 📝 Assignments (Faculty → Student)
-
-* Faculty create assignments per course
-* Students submit via file URL
-* Track who submitted/not submitted
+```env
+PORT=5000
+MONGO_URI=your_mongodb_uri
+JWT_SECRET=your_secret_key
+JWT_EXPIRES_IN=1d
+```
 
 ---
 
@@ -75,70 +73,34 @@ frontend/
   components/
   pages/
   utils/
-  App.tsx
-  main.tsx
+  App.jsx
+  main.jsx
 ```
 
 ---
 
-## 🛠️ Setup Instructions
-
-### 1. Clone Repository
-
-```bash
-git clone (https://github.com/Ashwinram005/Smart-Campus-Portal.git)
-```
-
-### 2. Setup Backend
-
-```bash
-cd backend
-npm install
-# Configure `.env` file
-npm run dev
-```
-
-### 3. Setup Frontend
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-### 4. Environment Variables
-
-Backend `.env`:
-
-```
-PORT=5000
-MONGO_URI=your_mongo_db_url
-JWT_SECRET=your_secret_key
-JWT_EXPIRES_IN=1d
-```
-
 ## 📝 Additional Notes
 
-* Faculty can only manage their own courses/materials/assignments
-* Students can only submit assignments for courses they’re enrolled in
-* Announcement feed is automatically filtered by role, department, year
+* Faculty can only manage their own courses, materials, and assignments.
+* Students can submit assignments only for their enrolled courses.
+* Admin can view and manage all records across users, placements, and announcements.
+* Cloudinary is used to handle file storage for assignments and course materials.
 
 ---
 
 ## 📌 Authors
 
-Built by 
+Built by:
 
-* ASHWINRAM M
+* **ASHWINRAM M**
 
 ---
 
-
 ## 🏁 Final Words
 
-This project was created in a limited time for the hackathon, and can be scaled further to include:
+This project was developed in a limited time during the MERN Mavericks Hackathon. Future improvements can include:
 
 * Attendance Tracking
 * Grade Management
-* Real-time chat between students & faculty
-* Notification & Email Integration
+* Real-time Messaging
+* Notifications / Email Alerts
