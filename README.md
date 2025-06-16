@@ -93,8 +93,6 @@ To log in as an Admin for the first time, use the credentials below:
 ## 📁 Project Structure
 
 ```
-## 📁 Project Structure
-
 Smart-Campus-Portal/
 ├── backend/
 │ ├── config/
