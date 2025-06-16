@@ -71,7 +71,7 @@ npm install
 Create a `.env` file inside the `frontend/` directory:
 
 ```env
-VITE_BACKEND_URL=BACKENDURL/api
+VITE_BACKEND_URL=http://localhost:5000/api
 VITE_CLOUDINARY_CLOUD_NAME=your_coud_name
 VITE_CLOUDINARY_UPLOAD_PRESET=your_cloud_preset
 ```
