@@ -13,6 +13,10 @@ import PlacementManagement from "./pages/Admin/PlacementManagement";
 import CourseManagement from "./pages/Faculty/CourseManagement";
 import CourseDetailsPage from "./pages/Faculty/CourseDetailsPage"; // <--- Import the CourseDetailsPage
 import Login from "./pages/Login";
+import StudentCourseManagement from "./pages/Student/StudentCourseManagement";
+import StudentPlacement from "./pages/Student/StudentPlacement";
+import StudentAnnouncement from "./pages/Student/StudentAnnouncement";
+import EventManagementFaculty from "./pages/Faculty/EventManagementFaculty";
 
 function App() {
   const [appUsers, setAppUsers] = useState([]); // Initialize with an empty array or fetch data
@@ -43,6 +47,46 @@ function App() {
           <PrivateRoute>
             <Layout currentPageTitle="Event Management">
               <EventManagement />
+            </Layout>
+          </PrivateRoute>
+        }
+      ></Route>
+      <Route
+        path="/faculty/events"
+        element={
+          <PrivateRoute>
+            <Layout currentPageTitle="Event Management">
+              <EventManagementFaculty />
+            </Layout>
+          </PrivateRoute>
+        }
+      ></Route>
+      <Route
+        path="/students/courses"
+        element={
+          <PrivateRoute>
+            <Layout currentPageTitle="Event Management">
+              <StudentCourseManagement />
+            </Layout>
+          </PrivateRoute>
+        }
+      ></Route>
+      <Route
+        path="/students/placements"
+        element={
+          <PrivateRoute>
+            <Layout currentPageTitle="Student Placement">
+              <StudentPlacement />
+            </Layout>
+          </PrivateRoute>
+        }
+      ></Route>
+      <Route
+        path="/students/events"
+        element={
+          <PrivateRoute>
+            <Layout currentPageTitle="Student Placement">
+              <StudentAnnouncement />
             </Layout>
           </PrivateRoute>
         }

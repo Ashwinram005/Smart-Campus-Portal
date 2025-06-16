@@ -17,8 +17,10 @@ import {
   Shield,
   MoreVertical,
   Phone,
-  Download as DownloadIcon, // Renamed to avoid conflict with `Download` type from lucide-react
+  Download as DownloadIcon,
+  X, // Renamed to avoid conflict with `Download` type from lucide-react
 } from "lucide-react";
+import { jwtDecode } from "jwt-decode";
 
 /**
  * @typedef {Object} User
@@ -73,6 +75,8 @@ const UserManagement = ({ users: initialUsers, onUserUpdate }) => {
   });
 
   const token = localStorage.getItem("token");
+  const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
+
   // State to hold the ID of the logged-in user
   const [loggedInUserId, setLoggedInUserId] = useState(null);
 
@@ -96,10 +100,10 @@ const UserManagement = ({ users: initialUsers, onUserUpdate }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]); // Re-
   // run when 'token' changes, but fetchUsers is also a dep.
-  console.log("hello")
+
   const fetchUsers = useCallback(async () => {
     try {
-      const response = await fetch(`http://localhost:5000/api/users`, {
+      const response = await fetch(`${API_BASE_URL}/users`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -326,7 +330,7 @@ const UserManagement = ({ users: initialUsers, onUserUpdate }) => {
 
     try {
       const res = await toast.promise(
-        fetch("http://localhost:5000/api/auth/register", {
+        fetch(`${API_BASE_URL}/auth/register`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -389,7 +393,7 @@ const UserManagement = ({ users: initialUsers, onUserUpdate }) => {
 
     try {
       const res = await toast.promise(
-        fetch(`http://localhost:5000/api/users/${selectedUser._id}`, {
+        fetch(`${API_BASE_URL}/users/${selectedUser._id}`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
@@ -434,7 +438,7 @@ const UserManagement = ({ users: initialUsers, onUserUpdate }) => {
     if (window.confirm("Are you sure you want to delete this user?")) {
       try {
         const res = await toast.promise(
-          fetch(`http://localhost:5000/api/users/${userId}`, {
+          fetch(`${API_BASE_URL}/users/${userId}`, {
             method: "DELETE",
             headers: {
               Authorization: `Bearer ${token}`,
@@ -481,7 +485,7 @@ const UserManagement = ({ users: initialUsers, onUserUpdate }) => {
 
     try {
       const res = await toast.promise(
-        fetch(`http://localhost:5000/api/users/${userId}/toggle-status`, {
+        fetch(`${API_BASE_URL}/users/${userId}/toggle-status`, {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",

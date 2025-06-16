@@ -10,153 +10,73 @@ import {
   File,
   X,
   Trash2,
-  Building,
-  Calendar,
+  Building2, // Updated from Building for consistency
+  CalendarDays, // Updated from Calendar for consistency
   Layers,
   ChevronLeft,
   Loader2,
-  GraduationCap, // For assignments
-  Clock, // For due date
-  ClipboardCheck, // For submissions
-  Download, // For downloading submissions
-  Link, // For link materials
-  Mail, // For contacting not submitted students
+  GraduationCap,
+  Clock,
+  ClipboardCheck,
+  Download,
+  Link,
+  Mail,
+  UserRound, // For student names in submissions
+  CheckCircle, // For submitted status
+  AlertCircle, // For not submitted status
 } from "lucide-react";
 import { jwtDecode } from "jwt-decode";
 import toast, { Toaster } from "react-hot-toast";
+import { twMerge } from "tailwind-merge";
 
-/**
- * @typedef {Object} CourseMaterial
- * @property {string} _id - Unique identifier for the material
- * @property {string} fileName - Original file name (or title if that's what you store)
- * @property {string} fileUrl - Cloudinary URL for the file (or URL for link type)
- * @property {string} publicId - Cloudinary public ID for the file (null for link type)
- * @property {string} uploadedBy - User ID who uploaded the material
- * @property {string} uploadedByRole - Role of the user who uploaded it
- * @property {string} createdAt - Timestamp of upload
- * @property {string} title - The title of the material as entered by the user
- * @property {string} description - The description of the material as entered by the user
- * @property {string} type - The simplified type of the material (e.g., "pdf", "video", "doc", "link")
- */
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
-/**
- * @typedef {Object} Assignment
- * @property {string} _id
- * @property {string} courseId
- * @property {string} title
- * @property {string} description
- * @property {string} dueDate - ISO date string
- * @property {string} createdBy - Faculty ID
- * @property {string} createdAt
- */
+const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
 
-/**
- * @typedef {Object} Submission
- * @property {string} _id
- * @property {string} assignmentId
- * @property {Object} student - Populated student object
- * @property {string} student._id
- * @property {string} student.name
- * @property {string} student.email
- * @property {string} student.studentId
- * @property {string} fileUrl
- * @property {string} publicId
- * @property {string} fileName // Original file name
- * @property {string} comments
- * @property {string} submittedAt
- * @property {number} [marks]
- * @property {string} [feedback]
- */
-
-/**
- * @typedef {Object} NotSubmittedStudent
- * @property {string} _id - Student user ID
- * @property {string} name
- * @property {string} email
- * @property {string} studentId
- */
-
-const API_BASE_URL = "http://localhost:5000/api";
-
-// --- Cloudinary Configuration (Confirmed from your code) ---
-const CLOUDINARY_CLOUD_NAME = "dzeweglcv";
-const CLOUDINARY_UPLOAD_PRESET = "SmartcampusPortal";
-
-// --- Helper Functions ---
-
-/**
- * Maps MIME types to your custom file type enum.
- * @param {string} mimeType - The MIME type of the file.
- * @returns {string} One of ["pdf", "doc", "ppt", "video", "audio", "image", "other", "link"].
- * Note: 'link' type won't come from file input, but added for completeness if your enum includes it.
- */
 const mapMimeTypeToCustomType = (mimeType) => {
   if (!mimeType) return "other";
-
-  if (mimeType === "application/pdf") {
-    return "pdf";
-  }
+  if (mimeType.includes("pdf")) return "pdf";
   if (
-    mimeType === "application/msword" ||
-    mimeType ===
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-  ) {
+    mimeType.includes("wordprocessingml.document") ||
+    mimeType.includes("msword")
+  )
     return "doc";
-  }
   if (
-    mimeType === "application/vnd.ms-powerpoint" ||
-    mimeType ===
-      "application/vnd.openxmlformats-officedocument.presentationml.presentation"
-  ) {
+    mimeType.includes("presentationml.presentation") ||
+    mimeType.includes("powerpoint")
+  )
     return "ppt";
-  }
-  if (mimeType.startsWith("video/")) {
-    return "video";
-  }
-  if (mimeType.startsWith("audio/")) {
-    return "audio";
-  }
-  if (mimeType.startsWith("image/")) {
-    return "image";
-  }
-  // Add more specific mappings if needed for other common document types (e.g., excel, text)
-  if (
-    mimeType === "application/vnd.ms-excel" ||
-    mimeType ===
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-  ) {
-    return "doc"; // Grouping excel with docs for simplicity, adjust if you need 'xls' type
-  }
-  if (mimeType === "text/plain") {
-    return "doc"; // Grouping text with docs
-  }
-
+  if (mimeType.startsWith("video/")) return "video";
+  if (mimeType.startsWith("audio/")) return "audio";
+  if (mimeType.startsWith("image/")) return "image";
+  if (mimeType.includes("spreadsheetml.sheet") || mimeType.includes("excel"))
+    return "doc"; // Group Excel as doc
+  if (mimeType.includes("text/plain")) return "doc";
   return "other";
 };
 
-// Adjusted getFileIcon to use the custom type for better matching
 const getFileIcon = (customType) => {
   switch (customType) {
     case "pdf":
-      return <FileText className="w-8 h-8" />;
+      return <FileText className="w-8 h-8 text-red-400" />;
     case "image":
-      return <FileImage className="w-8 h-8" />;
+      return <FileImage className="w-8 h-8 text-blue-400" />;
     case "video":
-      return <FileVideo className="w-8 h-8" />;
+      return <FileVideo className="w-8 h-8 text-purple-400" />;
     case "audio":
-      return <FileAudio className="w-8 h-8" />;
-    case "doc": // Covers Word, Excel, Text
-      return <FileText className="w-8 h-8" />; // Using FileText for generic docs
+      return <FileAudio className="w-8 h-8 text-emerald-400" />;
+    case "doc":
+      return <FileText className="w-8 h-8 text-orange-400" />; // Generic doc icon with orange
     case "ppt":
-      return <FileText className="w-8 h-8" />; // Using FileText, consider a specific icon if available
+      return <FileText className="w-8 h-8 text-yellow-400" />; // PPT with yellow
     case "link":
-      return <Link className="w-8 h-8" />; // Specific icon for links
+      return <Link className="w-8 h-8 text-cyan-400" />;
     default:
-      return <File className="w-8 h-8" />;
+      return <File className="w-8 h-8 text-gray-400" />;
   }
 };
 
-// Adjusted getFileTypeLabel to use the custom type for display
 const getFileTypeLabel = (customType) => {
   switch (customType) {
     case "pdf":
@@ -180,19 +100,19 @@ const getFileTypeLabel = (customType) => {
 };
 
 const getDepartmentColor = (departmentName) => {
+  // Using specific text/border colors from your theme's palette
   const colors = {
-    "Computer Science": "bg-indigo-100 text-indigo-800",
-    "Electrical Engineering": "bg-purple-100 text-purple-800",
-    "Mechanical Engineering": "bg-green-100 text-green-800",
-    "Civil Engineering": "bg-yellow-100 text-yellow-800",
-    Mathematics: "bg-red-100 text-red-800",
-    Physics: "bg-blue-100 text-blue-800",
-    Chemistry: "bg-teal-100 text-teal-800",
+    "Computer Science": "text-indigo-300 border-indigo-700",
+    "Electrical Engineering": "text-purple-300 border-purple-700",
+    "Mechanical Engineering": "text-green-300 border-green-700",
+    "Civil Engineering": "text-yellow-300 border-yellow-700",
+    Mathematics: "text-red-300 border-red-700",
+    Physics: "text-blue-300 border-blue-700",
+    Chemistry: "text-teal-300 border-teal-700",
   };
-  return colors[departmentName] || "bg-gray-100 text-gray-800";
+  return colors[departmentName] || "text-gray-300 border-gray-700";
 };
 
-// --- CourseDetailsPage Component ---
 const CourseDetailsPage = () => {
   const { courseId } = useParams();
   const navigate = useNavigate();
@@ -206,7 +126,7 @@ const CourseDetailsPage = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [materialTitle, setMaterialTitle] = useState("");
   const [materialDescription, setMaterialDescription] = useState("");
-  const [materialTypeInput, setMaterialTypeInput] = useState("file"); // "file" or "link"
+  const [materialTypeInput, setMaterialTypeInput] = useState("file");
   const [materialLink, setMaterialLink] = useState("");
 
   const [assignments, setAssignments] = useState([]);
@@ -221,17 +141,10 @@ const CourseDetailsPage = () => {
   const [
     selectedAssignmentForSubmissions,
     setSelectedAssignmentForSubmissions,
-  ] = useState(null); // To view submissions for a specific assignment
-  const [facultySubmissionsList, setFacultySubmissionsList] = useState([]); // Full submitted objects for faculty
-  const [notSubmittedStudents, setNotSubmittedStudents] = useState([]); // New state for not submitted students
-  const [loadingSubmissions, setLoadingSubmissions] = useState(false); // Combined loading for both lists
-
-  // Removed student submission states:
-  // const [showSubmissionForm, setShowSubmissionForm] = useState(false);
-  // const [submissionFile, setSubmissionFile] = useState(null);
-  // const [submissionComments, setSubmissionComments] = useState("");
-  // const [submittingAssignment, setSubmittingAssignment] = useState(false);
-  // const [mySubmission, setMySubmission] = useState(null);
+  ] = useState(null);
+  const [facultySubmissionsList, setFacultySubmissionsList] = useState([]);
+  const [notSubmittedStudents, setNotSubmittedStudents] = useState([]);
+  const [loadingSubmissions, setLoadingSubmissions] = useState(false);
 
   const [userRole, setUserRole] = useState("student");
   const [userId, setUserId] = useState(null);
@@ -336,7 +249,7 @@ const CourseDetailsPage = () => {
       const data = await response.json();
       setAssignments(
         data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-      ); // Sort by creation date
+      );
     } catch (err) {
       console.error("Error fetching assignments:", err);
       setError(
@@ -348,12 +261,11 @@ const CourseDetailsPage = () => {
     }
   }, [courseId, token]);
 
-  // Function to fetch submitted assignments with details (for faculty)
   const fetchSubmittedAssignmentsDetails = useCallback(
     async (assignmentId) => {
       try {
         const response = await fetch(
-          `${API_BASE_URL}/assignments/${assignmentId}/submissions`, // API that returns an array of Submission objects
+          `${API_BASE_URL}/assignments/${assignmentId}/submissions`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -367,7 +279,7 @@ const CourseDetailsPage = () => {
           );
         }
         const data = await response.json();
-        setFacultySubmissionsList(data); // Set the detailed list for faculty
+        setFacultySubmissionsList(data);
       } catch (err) {
         console.error("Error fetching submitted details:", err);
         toast.error(err.message || "Failed to load detailed submissions.");
@@ -377,18 +289,15 @@ const CourseDetailsPage = () => {
     [token]
   );
 
-  // Function to fetch submitted/not-submitted status for faculty
   const fetchSubmissionStatusForFaculty = useCallback(
     async (assignmentId) => {
       if (!assignmentId) return;
-      setLoadingSubmissions(true); // Start loading for both
+      setLoadingSubmissions(true);
       try {
-        // Fetch detailed submissions (the full list of submitted files)
-        await fetchSubmittedAssignmentsDetails(assignmentId); // This call now populates facultySubmissionsList
+        await fetchSubmittedAssignmentsDetails(assignmentId);
 
-        // Fetch submitted/not-submitted status (who has submitted, who hasn't)
         const statusResponse = await fetch(
-          `${API_BASE_URL}/assignments/${assignmentId}/status`, // Your new API for submitted/not-submitted list
+          `${API_BASE_URL}/assignments/${assignmentId}/status`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -416,16 +325,6 @@ const CourseDetailsPage = () => {
     [token, fetchSubmittedAssignmentsDetails]
   );
 
-  // Removed fetchMySubmission function as it's no longer needed for students
-  /*
-  const fetchMySubmission = useCallback(
-    async (assignmentId) => {
-      // This function is now entirely removed for student role
-    },
-    [token, userRole]
-  );
-  */
-
   useEffect(() => {
     if (courseId) {
       fetchMaterials();
@@ -438,22 +337,17 @@ const CourseDetailsPage = () => {
       if (userRole === "faculty") {
         fetchSubmissionStatusForFaculty(selectedAssignmentForSubmissions._id);
       }
-      // No action for student role here, as they won't trigger a separate submission fetch
-      // if they're not submitting or viewing 'their' specific submission.
-      // If student needs to see assignment details, those come from `selectedAssignmentForSubmissions`
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     selectedAssignmentForSubmissions,
     userRole,
     fetchSubmissionStatusForFaculty,
-    // fetchMySubmission is removed here
   ]);
 
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
       setSelectedFile(e.target.files[0]);
-      // Pre-fill title using the file name (without extension)
       setMaterialTitle(
         e.target.files[0].name.split(".").slice(0, -1).join(".")
       );
@@ -463,19 +357,6 @@ const CourseDetailsPage = () => {
     }
   };
 
-  // Removed handleSubmissionFileChange as it's no longer needed
-  /*
-  const handleSubmissionFileChange = (e) => {
-    // This function is now entirely removed
-  };
-  */
-
-  /**
-   * Uploads a file to Cloudinary using an unsigned upload preset.
-   * @param {File} file The file to upload.
-   * @returns {Promise<{secure_url: string, public_id: string, format: string, resource_type: string}>} Cloudinary response.
-   * @throws {Error} If the upload fails.
-   */
   const uploadToCloudinary = async (file) => {
     const formData = new FormData();
     formData.append("file", file);
@@ -499,7 +380,7 @@ const CourseDetailsPage = () => {
       }
 
       const data = await response.json();
-      return data; // Contains secure_url, public_id, format, etc.
+      return data;
     } catch (err) {
       console.error("Error during Cloudinary upload process:", err);
       throw err;
@@ -566,12 +447,11 @@ const CourseDetailsPage = () => {
           publicId: cloudinaryResponse.public_id,
         };
       } else {
-        // Handle link material
         materialData = {
           ...materialData,
-          type: "link", // Explicitly set type as "link"
+          type: "link",
           fileUrl: materialLink.trim(),
-          publicId: null, // No publicId for links
+          publicId: null,
         };
       }
 
@@ -596,21 +476,20 @@ const CourseDetailsPage = () => {
       toast.success("Material details saved successfully!", {
         id: "save-material",
       });
-      // Reset form fields
       setSelectedFile(null);
       setMaterialTitle("");
       setMaterialDescription("");
       setMaterialLink("");
-      setMaterialTypeInput("file"); // Reset to file upload by default
+      setMaterialTypeInput("file");
       if (document.getElementById("material-upload-input")) {
         document.getElementById("material-upload-input").value = "";
       }
-      fetchMaterials(); // Refresh the list of materials
+      fetchMaterials();
     } catch (error) {
       console.error("Error in upload process:", error);
       setError(error.message || "An error occurred during material upload.");
       toast.error(error.message || "Failed to upload material.");
-      toast.dismiss("cloudinary-upload"); // Dismiss if still showing
+      toast.dismiss("cloudinary-upload");
       toast.dismiss("save-material");
     } finally {
       setUploading(false);
@@ -618,7 +497,6 @@ const CourseDetailsPage = () => {
   };
 
   const handleDeleteMaterial = async (materialId, publicId) => {
-    // Pass publicId to backend for Cloudinary deletion
     if (userRole !== "faculty") {
       toast.error("Permission Denied: Only faculty can delete materials.");
       return;
@@ -634,63 +512,79 @@ const CourseDetailsPage = () => {
 
     toast.custom(
       (t) => (
-        <div className="bg-white p-4 rounded-lg shadow-lg flex flex-col items-center border border-gray-200">
-          <p className="text-gray-800 text-lg mb-4">
-            Are you sure you want to delete this material?
-          </p>
-          <div className="flex space-x-4">
-            <button
-              onClick={() => {
-                toast.dismiss(t.id);
-                (async () => {
-                  try {
-                    toast.loading("Deleting material...", {
-                      id: "delete-material",
-                    });
-                    const response = await fetch(
-                      `${API_BASE_URL}/materials/${materialId}`, // Backend endpoint for deletion
-                      {
-                        method: "DELETE",
-                        headers: {
-                          "Content-Type": "application/json", // Important for sending body with DELETE
-                          Authorization: `Bearer ${token}`,
-                        },
-                        body: JSON.stringify({ publicId: publicId }), // Send publicId (will be null for links)
-                      }
-                    );
-
-                    if (!response.ok) {
-                      const errorData = await response.json();
-                      throw new Error(
-                        errorData.message ||
-                          `Deletion failed: ${response.statusText}`
-                      );
-                    }
-
-                    toast.success("Material deleted successfully!", {
-                      id: "delete-material",
-                    });
-                    fetchMaterials(); // Refresh the list
-                  } catch (error) {
-                    console.error("Error deleting material:", error);
-                    setError(
-                      error.message || "An error occurred during deletion."
-                    );
-                    toast.error(error.message || "Failed to delete material.");
-                    toast.dismiss("delete-material"); // Dismiss if still showing
-                  }
-                })();
-              }}
-              className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors shadow-sm"
-            >
-              Delete
-            </button>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fade-in">
+          <div className="w-full max-w-xs sm:max-w-sm rounded-xl border border-[#0c4511] bg-[#0a130f] p-8 text-white shadow-2xl shadow-[#00FFA5]/10 relative animate-scale-in">
             <button
               onClick={() => toast.dismiss(t.id)}
-              className="bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300 transition-colors shadow-sm"
+              className="absolute top-4 right-4 text-gray-400 hover:text-white p-2 rounded-full hover:bg-[#1a2e20] transition-colors"
+              title="Close"
             >
-              Cancel
+              <X className="w-6 h-6" />
             </button>
+            <p className="text-xl sm:text-2xl font-semibold mb-6 text-center text-red-400">
+              Confirm Deletion
+            </p>
+            <p className="text-lg text-gray-300 mb-6 text-center">
+              Are you sure you want to delete this material?
+            </p>
+            <div className="flex flex-col sm:flex-row justify-center space-y-3 sm:space-y-0 sm:space-x-4">
+              <button
+                onClick={() => {
+                  toast.dismiss(t.id);
+                  (async () => {
+                    try {
+                      toast.loading("Deleting material...", {
+                        id: "delete-material",
+                      });
+                      const response = await fetch(
+                        `${API_BASE_URL}/materials/${materialId}`,
+                        {
+                          method: "DELETE",
+                          headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${token}`,
+                          },
+                          body: JSON.stringify({ publicId: publicId }),
+                        }
+                      );
+
+                      if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(
+                          errorData.message ||
+                            `Deletion failed: ${response.statusText}`
+                        );
+                      }
+
+                      toast.success("Material deleted successfully!", {
+                        id: "delete-material",
+                      });
+                      fetchMaterials();
+                    } catch (error) {
+                      console.error("Error deleting material:", error);
+                      setError(
+                        error.message || "An error occurred during deletion."
+                      );
+                      toast.error(
+                        error.message || "Failed to delete material."
+                      );
+                      toast.dismiss("delete-material");
+                    }
+                  })();
+                }}
+                className="group relative inline-flex items-center justify-center p-0.5 overflow-hidden text-lg font-medium rounded-full bg-gradient-to-br from-red-600 to-rose-500 hover:text-white focus:ring-4 focus:outline-none focus:ring-red-300 w-full sm:w-auto transform hover:scale-105 transition-transform duration-200 shadow-md"
+              >
+                <span className="relative flex items-center justify-center px-6 py-3 transition-all ease-in duration-75 bg-[#0a130f] rounded-full group-hover:bg-opacity-0 text-white group-hover:text-white">
+                  Delete Anyway
+                </span>
+              </button>
+              <button
+                onClick={() => toast.dismiss(t.id)}
+                className="px-6 py-3 rounded-full text-white font-medium bg-[#1a2e20] hover:bg-[#1f2d23] transition-colors shadow-md transform hover:scale-105"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
       ),
@@ -727,7 +621,6 @@ const CourseDetailsPage = () => {
           title: newAssignmentTitle.trim(),
           description: newAssignmentDescription.trim(),
           dueDate: newAssignmentDueDate,
-          // maxMarks is removed from here
         }),
       });
 
@@ -746,7 +639,7 @@ const CourseDetailsPage = () => {
       setNewAssignmentDescription("");
       setNewAssignmentDueDate("");
       setShowCreateAssignmentForm(false);
-      fetchAssignments(); // Refresh assignments list
+      fetchAssignments();
     } catch (err) {
       console.error("Error creating assignment:", err);
       toast.error(err.message || "Failed to create assignment.");
@@ -768,75 +661,82 @@ const CourseDetailsPage = () => {
 
     toast.custom(
       (t) => (
-        <div className="bg-white p-4 rounded-lg shadow-lg flex flex-col items-center border border-gray-200">
-          <p className="text-gray-800 text-lg mb-4">
-            Are you sure you want to delete this assignment and all its
-            submissions?
-          </p>
-          <div className="flex space-x-4">
-            <button
-              onClick={() => {
-                toast.dismiss(t.id);
-                (async () => {
-                  try {
-                    toast.loading("Deleting assignment...", {
-                      id: "delete-assignment",
-                    });
-                    const response = await fetch(
-                      `${API_BASE_URL}/assignments/${assignmentId}`,
-                      {
-                        method: "DELETE",
-                        headers: {
-                          Authorization: `Bearer ${token}`,
-                        },
-                      }
-                    );
-
-                    if (!response.ok) {
-                      const errorData = await response.json();
-                      throw new Error(
-                        errorData.message ||
-                          `Deletion failed: ${response.statusText}`
-                      );
-                    }
-
-                    toast.success("Assignment deleted successfully!", {
-                      id: "delete-assignment",
-                    });
-                    fetchAssignments(); // Refresh assignments list
-                    setSelectedAssignmentForSubmissions(null); // Close submissions view
-                  } catch (error) {
-                    console.error("Error deleting assignment:", error);
-                    toast.error(
-                      error.message || "Failed to delete assignment."
-                    );
-                    toast.dismiss("delete-assignment");
-                  }
-                })();
-              }}
-              className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors shadow-sm"
-            >
-              Delete
-            </button>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fade-in">
+          <div className="w-full max-w-xs sm:max-w-sm rounded-xl border border-[#0c4511] bg-[#0a130f] p-8 text-white shadow-2xl shadow-[#00FFA5]/10 relative animate-scale-in">
             <button
               onClick={() => toast.dismiss(t.id)}
-              className="bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300 transition-colors shadow-sm"
+              className="absolute top-4 right-4 text-gray-400 hover:text-white p-2 rounded-full hover:bg-[#1a2e20] transition-colors"
+              title="Close"
             >
-              Cancel
+              <X className="w-6 h-6" />
             </button>
+            <p className="text-xl sm:text-2xl font-semibold mb-6 text-center text-red-400">
+              Confirm Deletion
+            </p>
+            <p className="text-lg text-gray-300 mb-6 text-center">
+              Are you sure you want to delete this assignment and all its
+              submissions?
+            </p>
+            <div className="flex flex-col sm:flex-row justify-center space-y-3 sm:space-y-0 sm:space-x-4">
+              <button
+                onClick={() => {
+                  toast.dismiss(t.id);
+                  (async () => {
+                    try {
+                      toast.loading("Deleting assignment...", {
+                        id: "delete-assignment",
+                      });
+                      const response = await fetch(
+                        `${API_BASE_URL}/assignments/${assignmentId}`,
+                        {
+                          method: "DELETE",
+                          headers: {
+                            Authorization: `Bearer ${token}`,
+                          },
+                        }
+                      );
+
+                      if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(
+                          errorData.message ||
+                            `Deletion failed: ${response.statusText}`
+                        );
+                      }
+
+                      toast.success("Assignment deleted successfully!", {
+                        id: "delete-assignment",
+                      });
+                      fetchAssignments();
+                      setSelectedAssignmentForSubmissions(null);
+                    } catch (error) {
+                      console.error("Error deleting assignment:", error);
+                      toast.error(
+                        error.message || "Failed to delete assignment."
+                      );
+                      toast.dismiss("delete-assignment");
+                    }
+                  })();
+                }}
+                className="group relative inline-flex items-center justify-center p-0.5 overflow-hidden text-lg font-medium rounded-full bg-gradient-to-br from-red-600 to-rose-500 hover:text-white focus:ring-4 focus:outline-none focus:ring-red-300 w-full sm:w-auto transform hover:scale-105 transition-transform duration-200 shadow-md"
+              >
+                <span className="relative flex items-center justify-center px-6 py-3 transition-all ease-in duration-75 bg-[#0a130f] rounded-full group-hover:bg-opacity-0 text-white group-hover:text-white">
+                  Delete Anyway
+                </span>
+              </button>
+              <button
+                onClick={() => toast.dismiss(t.id)}
+                className="px-6 py-3 rounded-full text-white font-medium bg-[#1a2e20] hover:bg-[#1f2d23] transition-colors shadow-md transform hover:scale-105"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
       ),
       { duration: Infinity, style: { width: "fit-content" } }
     );
   };
-
-  // Removed handleSubmitAssignment function
-  /*
-  const handleSubmitAssignment = async (e) => {
-    // This function is now entirely removed
-  };
-  */
 
   const formatDate = (isoString) => {
     if (!isoString) return "N/A";
@@ -851,35 +751,33 @@ const CourseDetailsPage = () => {
     });
   };
 
-  // If course is not available and an error is set (meaning it couldn't be loaded/found),
-  // show a specific error page.
   if (error && !course) {
     return (
-      <div className="text-center py-20 bg-gray-50 min-h-screen">
-        <X className="w-20 h-20 text-red-400 mx-auto mb-6" />
-        <h2 className="text-2xl font-bold text-red-700 mb-3">
-          Error: Course Data Missing
+      <div className="text-center py-20 bg-black text-white min-h-screen flex flex-col items-center justify-center">
+        <X className="w-20 h-20 text-red-400 mx-auto mb-6 filter drop-shadow-[0_0_8px_rgba(255,0,0,0.4)]" />
+        <h2 className="text-3xl font-bold text-red-500 mb-3">
+          Error: Course Data Unavailable
         </h2>
-        <p className="text-gray-500 mt-2">{error}</p>
+        <p className="text-gray-400 mt-2 text-lg">{error}</p>
         <button
           onClick={() => navigate("/courses")}
-          className="mt-6 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          className="mt-8 group relative inline-flex items-center justify-center p-0.5 overflow-hidden text-lg font-medium rounded-full bg-gradient-to-br from-[#00FFA5] to-blue-500 hover:text-white focus:ring-4 focus:outline-none focus:ring-[#00FFA5]/30 shadow-xl hover:shadow-[#00FFA5]/50 transition-all duration-300"
         >
-          <ChevronLeft className="w-5 h-5 mr-2" /> Back to Courses
+          <span className="relative flex items-center justify-center px-8 py-3 transition-all ease-in duration-75 bg-black rounded-full group-hover:bg-opacity-0 text-white">
+            <ChevronLeft className="w-5 h-5 mr-3 -ml-1" /> Back to Courses
+          </span>
         </button>
       </div>
     );
   }
 
-  // If course data is still loading or not available yet but no error,
-  // we might want a general loading state for the *page* itself,
-  // though current logic assumes course is either there or error.
-  // For now, if `course` is null, the main content won't render details properly.
   if (!course) {
     return (
-      <div className="text-center py-20 bg-gray-50 min-h-screen">
-        <Loader2 className="animate-spin h-10 w-10 text-blue-600 mx-auto mb-3" />
-        <p className="text-gray-600">Loading course details...</p>
+      <div className="text-center py-20 bg-black text-white min-h-screen flex flex-col items-center justify-center">
+        <Loader2 className="animate-spin h-16 w-16 text-[#00FFA5] mx-auto mb-6 filter drop-shadow-[0_0_8px_rgba(0,255,165,0.4)]" />
+        <p className="text-gray-400 text-xl">
+          Initiating data stream for course details...
+        </p>
       </div>
     );
   }
@@ -887,28 +785,30 @@ const CourseDetailsPage = () => {
   const canUploadAndDelete = userRole === "faculty";
   const canCreateAssignment = userRole === "faculty";
   const canDeleteAssignment = userRole === "faculty";
-  const canViewSubmissions = userRole === "faculty"; // Only faculty can view submissions now
+  const canViewSubmissions = userRole === "faculty";
 
   return (
-    <div className="p-4 sm:p-6 space-y-8 bg-gray-50 min-h-screen font-sans">
+    <div className="space-y-10 text-white font-sans overflow-hidden">
       <Toaster position="top-right" />
 
       {/* Back Button and Course Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between pb-4 border-b border-gray-200 gap-4">
+      <div className="flex flex-col md:flex-row md:items-end justify-between pb-8 border-b border-[#0c4511] gap-6">
         <button
           onClick={() => navigate("/courses")}
-          className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 w-fit"
+          className="group relative inline-flex items-center justify-center p-0.5 overflow-hidden text-lg font-medium rounded-full bg-gradient-to-br from-[#00FFA5] to-blue-500 hover:text-white focus:ring-4 focus:outline-none focus:ring-[#00FFA5]/30 shadow-md hover:shadow-[#00FFA5]/20 transition-all duration-300 w-fit"
         >
-          <ChevronLeft className="w-5 h-5 mr-2" />
-          Back to Courses
+          <span className="relative flex items-center justify-center px-6 py-2.5 transition-all ease-in duration-75 bg-[#0a130f] rounded-full group-hover:bg-opacity-0 text-white">
+            <ChevronLeft className="w-5 h-5 mr-2" />
+            Back to Courses
+          </span>
         </button>
-        <div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 leading-tight">
+        <div className="text-right">
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-[#00FFA5] animate-gradient-shift">
             {course.courseName}
           </h1>
-          <p className="text-gray-600 mt-2 text-base sm:text-lg">
+          <p className="text-gray-400 mt-2 text-lg sm:text-xl">
             Course Code:{" "}
-            <span className="font-semibold text-gray-800">
+            <span className="font-semibold text-white">
               {course.courseCode}
             </span>
           </p>
@@ -916,36 +816,39 @@ const CourseDetailsPage = () => {
       </div>
 
       {/* Course Info Section */}
-      <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-lg">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">
+      <div className="bg-[#0a130f] rounded-2xl p-6 border border-[#0c4511] shadow-xl shadow-[#00FFA5]/10">
+        <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 mb-6">
           Course Information
         </h2>
-        <div className="space-y-3 text-gray-700 text-base">
+        <div className="space-y-4 text-gray-400 text-base">
           <div className="flex items-center">
-            <Building className="w-5 h-5 mr-3 text-indigo-600" />
+            <Building2 className="w-5 h-5 mr-3 text-indigo-400" />
             <span>
-              <span className="font-semibold">Department:</span>{" "}
+              <span className="font-semibold text-gray-300">Department:</span>{" "}
               <span
-                className={`px-3 py-1 rounded-full text-sm font-medium ${getDepartmentColor(
+                className={`px-3 py-1 rounded-full text-sm font-medium border ${getDepartmentColor(
                   course.department
-                )}`}
+                )} bg-[#0a130f]`}
               >
                 {course.department}
               </span>
             </span>
           </div>
           <div className="flex items-center">
-            <Calendar className="w-5 h-5 mr-3 text-purple-600" />
+            <CalendarDays className="w-5 h-5 mr-3 text-purple-400" />
             <span>
-              <span className="font-semibold">Year:</span> {course.year}
+              <span className="font-semibold text-gray-300">Year:</span>{" "}
+              {course.year}
             </span>
           </div>
           {course.description && (
             <div className="flex items-start">
-              <Layers className="w-5 h-5 mr-3 mt-1 text-teal-600 flex-shrink-0" />
+              <Layers className="w-5 h-5 mr-3 mt-1 text-teal-400 flex-shrink-0" />
               <span>
-                <span className="font-semibold">Description:</span>{" "}
-                <p className="mt-1 text-gray-800">{course.description}</p>
+                <span className="font-semibold text-gray-300">
+                  Description:
+                </span>{" "}
+                <p className="mt-1 text-gray-400">{course.description}</p>
               </span>
             </div>
           )}
@@ -954,24 +857,24 @@ const CourseDetailsPage = () => {
 
       {/* Upload Materials Section (Faculty Only) */}
       {canUploadAndDelete && (
-        <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-lg">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">
+        <div className="bg-[#0a130f] rounded-2xl p-6 border border-[#0c4511] shadow-xl shadow-[#00FFA5]/10">
+          <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-400 mb-6">
             Upload New Material
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-black">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {/* Material Title */}
             <div>
               <label
                 htmlFor="material-title"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-semibold text-gray-300 mb-1"
               >
-                Material Title <span className="text-red-500">*</span>
+                Material Title <span className="text-red-400">*</span>
               </label>
               <input
                 type="text"
                 required
                 id="material-title"
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                className="w-full px-5 py-3 border border-[#0c4511] rounded-xl bg-black text-white placeholder-gray-500 focus:ring-2 focus:ring-[#00FFA5] focus:border-[#00FFA5] transition-colors disabled:bg-gray-950 disabled:cursor-not-allowed"
                 placeholder="e.g., Unit 5 Lecture Notes"
                 value={materialTitle}
                 onChange={(e) => setMaterialTitle(e.target.value)}
@@ -980,16 +883,16 @@ const CourseDetailsPage = () => {
 
             {/* Material Type Selection */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Material Type <span className="text-red-500">*</span>
+              <label className="block text-sm font-semibold text-gray-300 mb-1">
+                Material Type <span className="text-red-400">*</span>
               </label>
               <select
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-black"
+                className="w-full px-5 py-3 border border-[#0c4511] rounded-xl bg-black text-white appearance-none pr-10 focus:ring-2 focus:ring-[#00FFA5] focus:border-[#00FFA5] transition-colors"
                 value={materialTypeInput}
                 onChange={(e) => {
                   setMaterialTypeInput(e.target.value);
-                  setSelectedFile(null); // Clear file when switching to link
-                  setMaterialLink(""); // Clear link when switching to file
+                  setSelectedFile(null);
+                  setMaterialLink("");
                   if (document.getElementById("material-upload-input")) {
                     document.getElementById("material-upload-input").value = "";
                   }
@@ -1000,23 +903,22 @@ const CourseDetailsPage = () => {
               </select>
             </div>
 
-            {/* Conditional Input based on materialTypeInput */}
             {materialTypeInput === "file" && (
               <div className="md:col-span-2">
                 <label
                   htmlFor="material-upload-input"
-                  className="block text-sm font-medium text-gray-700 mb-1"
+                  className="block text-sm font-semibold text-gray-300 mb-1"
                 >
                   Select File
                 </label>
                 <input
                   type="file"
                   id="material-upload-input"
-                  className="block w-full text-sm text-gray-900 border border-gray-300 rounded-md cursor-pointer bg-gray-50 focus:outline-none file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                  className="block w-full text-sm text-white border border-[#0c4511] rounded-xl cursor-pointer bg-black focus:outline-none file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-[#0c4511] file:text-[#00FFA5] hover:file:bg-[#1a2e20] hover:file:text-white transition-colors"
                   onChange={handleFileChange}
                 />
                 {selectedFile && (
-                  <p className="text-gray-600 text-sm mt-2">
+                  <p className="text-gray-400 text-sm mt-2">
                     Selected File:{" "}
                     <span className="font-semibold">{selectedFile.name}</span> (
                     {(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
@@ -1029,14 +931,14 @@ const CourseDetailsPage = () => {
               <div className="md:col-span-2">
                 <label
                   htmlFor="material-link-input"
-                  className="block text-sm font-medium text-gray-700 mb-1"
+                  className="block text-sm font-semibold text-gray-300 mb-1"
                 >
-                  Material URL <span className="text-red-500">*</span>
+                  Material URL <span className="text-red-400">*</span>
                 </label>
                 <input
                   type="url"
                   id="material-link-input"
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-black"
+                  className="w-full px-5 py-3 border border-[#0c4511] rounded-xl bg-black text-white placeholder-gray-500 focus:ring-2 focus:ring-[#00FFA5] focus:border-[#00FFA5] transition-colors"
                   placeholder="e.g., https://www.example.com/lecture-video"
                   value={materialLink}
                   onChange={(e) => setMaterialLink(e.target.value)}
@@ -1045,25 +947,23 @@ const CourseDetailsPage = () => {
               </div>
             )}
           </div>
-          {/* Description Textarea */}
-          <div className="mt-4">
+          <div className="mt-5">
             <label
               htmlFor="material-description"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-semibold text-gray-300 mb-1"
             >
               Description
             </label>
             <textarea
               id="material-description"
               rows="3"
-              className="mt-1 block w-full border text-black border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              className="w-full px-5 py-3 border border-[#0c4511] rounded-xl bg-black text-white placeholder-gray-500 focus:ring-2 focus:ring-[#00FFA5] focus:border-[#00FFA5] transition-colors resize-y"
               placeholder="Detailed explanation, topics covered, etc."
               value={materialDescription}
               onChange={(e) => setMaterialDescription(e.target.value)}
             ></textarea>
           </div>
-          {/* Upload Button */}
-          <div className="mt-4 flex justify-end">
+          <div className="mt-6 flex justify-end">
             <button
               onClick={handleUploadMaterial}
               disabled={
@@ -1072,53 +972,54 @@ const CourseDetailsPage = () => {
                 (materialTypeInput === "file" && !selectedFile) ||
                 (materialTypeInput === "link" && !materialLink.trim())
               }
-              className="inline-flex items-center justify-center px-6 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-md disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
+              className="group relative inline-flex items-center justify-center p-0.5 overflow-hidden text-lg font-medium rounded-full bg-gradient-to-br from-[#00FFA5] to-blue-500 hover:text-white focus:ring-4 focus:outline-none focus:ring-[#00FFA5]/30 shadow-xl hover:shadow-[#00FFA5]/50 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
             >
-              {uploading ? (
-                <Loader2 className="animate-spin w-5 h-5 mr-2" />
-              ) : (
-                <UploadCloud className="w-5 h-5 mr-2" />
-              )}
-              {uploading ? "Uploading..." : "Upload Material"}
+              <span className="relative flex items-center justify-center px-8 py-3 transition-all ease-in duration-75 bg-[#0a130f] rounded-full group-hover:bg-opacity-0 text-white">
+                {uploading ? (
+                  <Loader2 className="animate-spin w-6 h-6 mr-3" />
+                ) : (
+                  <UploadCloud className="w-6 h-6 mr-3 -ml-1" />
+                )}
+                {uploading ? "Uploading..." : "Upload Material"}
+              </span>
             </button>
           </div>
         </div>
       )}
 
       {/* View Materials Section */}
-      <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-lg">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">
+      <div className="bg-[#0a130f] rounded-2xl p-6 border border-[#0c4511] shadow-xl shadow-[#00FFA5]/10">
+        <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-green-400 mb-6">
           Course Materials
         </h2>
         {error && materials.length === 0 && !loadingMaterials ? (
-          <div className="text-center py-8">
-            <X className="w-12 h-12 text-red-400 mx-auto mb-3" />
-            <p className="text-red-700 font-semibold mb-2">
+          <div className="text-center py-8 bg-[#1a2e20] rounded-lg border border-[#0c4511] shadow-md">
+            <X className="w-12 h-12 text-red-400 mx-auto mb-3 filter drop-shadow-[0_0_8px_rgba(255,0,0,0.4)]" />
+            <p className="text-red-500 font-semibold mb-2">
               Error Loading Materials:
             </p>
-            <p className="text-gray-500 text-sm">{error}</p>
+            <p className="text-gray-400 text-sm">{error}</p>
             <button
               onClick={fetchMaterials}
-              className="mt-4 px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="mt-4 px-4 py-2 border border-[#0c4511] rounded-md shadow-sm text-sm font-medium text-gray-300 bg-[#1a2e20] hover:bg-[#1f2d23] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#1a2e20] focus:ring-[#00FFA5]"
             >
               Retry Loading Materials
             </button>
           </div>
         ) : loadingMaterials ? (
-          <div className="text-center py-8">
-            <Loader2 className="animate-spin h-10 w-10 text-blue-600 mx-auto mb-3" />
-            <p className="text-gray-600">Loading materials...</p>
+          <div className="text-center py-8 bg-[#1a2e20] rounded-lg border border-[#0c4511] shadow-md">
+            <Loader2 className="animate-spin h-10 w-10 text-[#00FFA5] mx-auto mb-3 filter drop-shadow-[0_0_8px_rgba(0,255,165,0.4)]" />
+            <p className="text-gray-400">Loading materials...</p>
           </div>
         ) : materials.length > 0 ? (
           <ul className="space-y-4">
             {materials.map((material) => (
               <li
                 key={material._id}
-                className="flex items-center justify-between bg-gray-50 p-4 rounded-lg border border-gray-200 shadow-sm transition-all hover:shadow-md"
+                className="flex flex-col sm:flex-row items-center justify-between bg-[#1a2e20] p-4 rounded-lg border border-[#0c4511] shadow-md transition-all hover:shadow-lg hover:shadow-[#00FFA5]/10"
               >
-                <div className="flex items-center flex-grow min-w-0">
-                  <div className="flex-shrink-0 mr-4 text-blue-600">
-                    {/* Use material.type (which is now your custom enum) for icon */}
+                <div className="flex items-center flex-grow min-w-0 mb-3 sm:mb-0">
+                  <div className="flex-shrink-0 mr-4">
                     {getFileIcon(material.type)}
                   </div>
                   <div className="flex-grow min-w-0">
@@ -1126,25 +1027,23 @@ const CourseDetailsPage = () => {
                       href={material.fileUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-700 hover:text-blue-900 font-semibold truncate block text-lg"
-                      title={material.title} // Always display title
+                      className="text-[#00FFA5] hover:text-cyan-400 font-semibold truncate block text-lg transition-colors"
+                      title={material.title}
                     >
-                      {material.title} {/* Always display title */}
+                      {material.title}
                       {material.type === "link" && (
-                        <span className="ml-2 text-gray-500 text-sm">
+                        <span className="ml-2 text-gray-400 text-sm">
                           (External Link)
                         </span>
                       )}
                     </a>
                     {material.description && (
-                      <p className="text-gray-500 text-sm mt-0.5 max-w-full truncate">
+                      <p className="text-gray-400 text-sm mt-0.5 max-w-full truncate">
                         {material.description}
                       </p>
                     )}
                     <p className="text-gray-500 text-sm mt-0.5">
-                      Type:{" "}
-                      {/* Use material.type (which is now your custom enum) for label */}
-                      {getFileTypeLabel(material.type)}
+                      Type: {getFileTypeLabel(material.type)}
                     </p>
                   </div>
                 </div>
@@ -1153,7 +1052,7 @@ const CourseDetailsPage = () => {
                     onClick={() =>
                       handleDeleteMaterial(material._id, material.publicId)
                     }
-                    className="ml-4 p-2 rounded-full text-gray-500 hover:text-red-600 hover:bg-red-50 transition-colors"
+                    className="ml-0 sm:ml-4 p-2 rounded-full text-gray-400 hover:text-red-400 hover:bg-red-900 transition-colors shadow-md flex-shrink-0"
                     title="Delete Material"
                   >
                     <Trash2 className="w-5 h-5" />
@@ -1163,9 +1062,9 @@ const CourseDetailsPage = () => {
             ))}
           </ul>
         ) : (
-          <div className="text-center py-10 bg-gray-50 rounded-lg border border-gray-200">
-            <File className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500 text-lg">No materials uploaded yet.</p>
+          <div className="text-center py-10 bg-[#1a2e20] rounded-lg border border-[#0c4511] shadow-md">
+            <File className="w-16 h-16 text-gray-600 mx-auto mb-4 filter drop-shadow-[0_0_8px_rgba(0,255,165,0.2)]" />
+            <p className="text-gray-400 text-lg">No materials uploaded yet.</p>
             {canUploadAndDelete && (
               <p className="text-gray-500 text-md mt-2">
                 Use the section above to add new materials.
@@ -1176,36 +1075,40 @@ const CourseDetailsPage = () => {
       </div>
 
       {/* Assignments Section */}
-      <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-lg">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-bold text-gray-900">Assignments</h2>
+      <div className="bg-[#0a130f] rounded-2xl p-6 border border-[#0c4511] shadow-xl shadow-[#00FFA5]/10">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
+            Assignments
+          </h2>
           {canCreateAssignment && (
             <button
               onClick={() => setShowCreateAssignmentForm(true)}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+              className="group relative inline-flex items-center justify-center p-0.5 overflow-hidden text-lg font-medium rounded-full bg-gradient-to-br from-[#00FFA5] to-blue-500 hover:text-white focus:ring-4 focus:outline-none focus:ring-[#00FFA5]/30 shadow-md hover:shadow-[#00FFA5]/20 transition-all duration-300 w-fit"
             >
-              <GraduationCap className="w-5 h-5 mr-2" /> Create New Assignment
+              <span className="relative flex items-center justify-center px-6 py-2.5 transition-all ease-in duration-75 bg-[#0a130f] rounded-full group-hover:bg-opacity-0 text-white">
+                <GraduationCap className="w-5 h-5 mr-2" /> Create New Assignment
+              </span>
             </button>
           )}
         </div>
 
         {showCreateAssignmentForm && (
-          <div className="mt-4 p-4 border border-blue-200 bg-blue-50 rounded-lg shadow-inner">
-            <h3 className="text-xl font-semibold text-blue-800 mb-3">
+          <div className="mt-4 p-6 border border-[#0c4511] bg-[#1a2e20] rounded-lg shadow-inner shadow-[#00FFA5]/10">
+            <h3 className="text-xl font-semibold text-white mb-4">
               Create New Assignment
             </h3>
-            <form onSubmit={handleCreateAssignment} className="space-y-3">
+            <form onSubmit={handleCreateAssignment} className="space-y-4">
               <div>
                 <label
                   htmlFor="assignment-title"
-                  className="block text-sm font-medium text-gray-700"
+                  className="block text-sm font-semibold text-gray-300 mb-1"
                 >
-                  Title <span className="text-red-500">*</span>
+                  Title <span className="text-red-400">*</span>
                 </label>
                 <input
                   type="text"
                   id="assignment-title"
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 text-black focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  className="w-full px-5 py-3 border border-[#0c4511] rounded-xl bg-black text-white placeholder-gray-500 focus:ring-2 focus:ring-[#00FFA5] focus:border-[#00FFA5] transition-colors"
                   value={newAssignmentTitle}
                   onChange={(e) => setNewAssignmentTitle(e.target.value)}
                   required
@@ -1214,14 +1117,14 @@ const CourseDetailsPage = () => {
               <div>
                 <label
                   htmlFor="assignment-description"
-                  className="block text-sm font-medium text-gray-700"
+                  className="block text-sm font-semibold text-gray-300 mb-1"
                 >
                   Description
                 </label>
                 <textarea
                   id="assignment-description"
                   rows="3"
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 text-black focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  className="w-full px-5 py-3 border border-[#0c4511] rounded-xl bg-black text-white placeholder-gray-500 focus:ring-2 focus:ring-[#00FFA5] focus:border-[#00FFA5] transition-colors resize-y"
                   value={newAssignmentDescription}
                   onChange={(e) => setNewAssignmentDescription(e.target.value)}
                 ></textarea>
@@ -1229,38 +1132,40 @@ const CourseDetailsPage = () => {
               <div>
                 <label
                   htmlFor="assignment-due-date"
-                  className="block text-sm font-medium text-gray-700"
+                  className="block text-sm font-semibold text-gray-300 mb-1"
                 >
-                  Due Date <span className="text-red-500">*</span>
+                  Due Date <span className="text-red-400">*</span>
                 </label>
                 <input
                   type="datetime-local"
                   id="assignment-due-date"
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 text-black focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  className="w-full px-5 py-3 border border-[#0c4511] rounded-xl bg-black text-white focus:ring-2 focus:ring-[#00FFA5] focus:border-[#00FFA5] transition-colors"
                   value={newAssignmentDueDate}
                   onChange={(e) => setNewAssignmentDueDate(e.target.value)}
                   required
                 />
               </div>
-              <div className="flex justify-end space-x-3 mt-4">
+              <div className="flex justify-end space-x-4 mt-6">
                 <button
                   type="button"
                   onClick={() => setShowCreateAssignmentForm(false)}
-                  className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                  className="px-6 py-2.5 border border-[#0c4511] text-gray-300 rounded-lg font-medium hover:bg-[#1a2e20] transition-colors shadow-md"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={creatingAssignment}
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="group relative inline-flex items-center justify-center p-0.5 overflow-hidden text-lg font-medium rounded-full bg-gradient-to-br from-[#00FFA5] to-blue-500 hover:text-white focus:ring-4 focus:outline-none focus:ring-[#00FFA5]/30 shadow-md hover:shadow-[#00FFA5]/20 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {creatingAssignment ? (
-                    <Loader2 className="animate-spin w-4 h-4 mr-2" />
-                  ) : (
-                    <UploadCloud className="w-4 h-4 mr-2" />
-                  )}
-                  {creatingAssignment ? "Creating..." : "Create Assignment"}
+                  <span className="relative flex items-center justify-center px-6 py-2.5 transition-all ease-in duration-75 bg-[#0a130f] rounded-full group-hover:bg-opacity-0 text-white">
+                    {creatingAssignment ? (
+                      <Loader2 className="animate-spin w-5 h-5 mr-2" />
+                    ) : (
+                      <UploadCloud className="w-5 h-5 mr-2" />
+                    )}
+                    {creatingAssignment ? "Creating..." : "Create Assignment"}
+                  </span>
                 </button>
               </div>
             </form>
@@ -1268,59 +1173,51 @@ const CourseDetailsPage = () => {
         )}
 
         {loadingAssignments ? (
-          <div className="text-center py-8">
-            <Loader2 className="animate-spin h-10 w-10 text-blue-600 mx-auto mb-3" />
-            <p className="text-gray-600">Loading assignments...</p>
+          <div className="text-center py-8 bg-[#1a2e20] rounded-lg border border-[#0c4511] shadow-md">
+            <Loader2 className="animate-spin h-10 w-10 text-[#00FFA5] mx-auto mb-3 filter drop-shadow-[0_0_8px_rgba(0,255,165,0.4)]" />
+            <p className="text-gray-400">Loading assignments...</p>
           </div>
         ) : assignments.length > 0 ? (
           <ul className="space-y-4 mt-4">
             {assignments.map((assignment) => (
               <li
                 key={assignment._id}
-                className="bg-gray-50 p-4 rounded-lg border border-gray-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between transition-all hover:shadow-md"
+                className="bg-[#1a2e20] p-4 rounded-lg border border-[#0c4511] shadow-md flex flex-col sm:flex-row sm:items-center justify-between transition-all hover:shadow-lg hover:shadow-[#00FFA5]/10"
               >
                 <div className="flex-grow min-w-0">
-                  <h3 className="text-xl font-semibold text-gray-900">
+                  <h3 className="text-xl font-semibold text-white">
                     {assignment.title}
                   </h3>
                   {assignment.description && (
-                    <p className="text-gray-600 text-sm mt-1">
+                    <p className="text-gray-400 text-sm mt-1">
                       {assignment.description}
                     </p>
                   )}
                   <p className="text-gray-500 text-xs mt-2 flex items-center">
-                    <Clock className="w-4 h-4 mr-1" /> Due:{" "}
-                    {formatDate(assignment.dueDate)}
+                    <Clock className="w-4 h-4 mr-1 text-blue-400" /> Due:{" "}
+                    <span className="text-gray-400 ml-1">
+                      {formatDate(assignment.dueDate)}
+                    </span>
                   </p>
                 </div>
                 <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-2 mt-3 sm:mt-0">
-                  {/* Faculty can view submissions */}
-                  {userRole === "faculty" && (
+                  {canViewSubmissions && (
                     <button
                       onClick={() =>
                         setSelectedAssignmentForSubmissions(assignment)
                       }
-                      className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 shadow-sm"
+                      className="group relative inline-flex items-center justify-center p-0.5 overflow-hidden text-sm font-medium rounded-full bg-gradient-to-br from-purple-500 to-pink-500 hover:text-white focus:ring-4 focus:outline-none focus:ring-purple-300 shadow-md hover:shadow-purple-500/20"
                     >
-                      <ClipboardCheck className="w-4 h-4 mr-2" /> View
-                      Submissions
-                    </button>
-                  )}
-                  {/* Students only view details without submission option here */}
-                  {userRole === "student" && (
-                    <button
-                      onClick={() =>
-                        setSelectedAssignmentForSubmissions(assignment)
-                      }
-                      className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 shadow-sm"
-                    >
-                      <ClipboardCheck className="w-4 h-4 mr-2" /> View Details
+                      <span className="relative flex items-center justify-center px-4 py-2 transition-all ease-in duration-75 bg-[#1a2e20] rounded-full group-hover:bg-opacity-0 text-white">
+                        <ClipboardCheck className="w-4 h-4 mr-2" /> View{" "}
+                        {userRole === "faculty" ? "Submissions" : "Details"}
+                      </span>
                     </button>
                   )}
                   {canDeleteAssignment && (
                     <button
                       onClick={() => handleDeleteAssignment(assignment._id)}
-                      className="p-1.5 rounded-md text-gray-500 hover:text-red-600 hover:bg-red-50 transition-colors"
+                      className="p-2 rounded-full text-gray-400 hover:text-red-400 hover:bg-red-900 transition-colors shadow-md"
                       title="Delete Assignment"
                     >
                       <Trash2 className="w-5 h-5" />
@@ -1331,9 +1228,9 @@ const CourseDetailsPage = () => {
             ))}
           </ul>
         ) : (
-          <div className="text-center py-10 bg-gray-50 rounded-lg border border-gray-200">
-            <GraduationCap className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500 text-lg">No assignments posted yet.</p>
+          <div className="text-center py-10 bg-[#1a2e20] rounded-lg border border-[#0c4511] shadow-md">
+            <GraduationCap className="w-16 h-16 text-gray-600 mx-auto mb-4 filter drop-shadow-[0_0_8px_rgba(0,255,165,0.2)]" />
+            <p className="text-gray-400 text-lg">No assignments posted yet.</p>
             {canCreateAssignment && (
               <p className="text-gray-500 text-md mt-2">
                 Use "Create New Assignment" to add one.
@@ -1345,99 +1242,109 @@ const CourseDetailsPage = () => {
 
       {/* Submissions Modal/Section */}
       {selectedAssignmentForSubmissions && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto relative">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 z-[100] animate-fade-in">
+          <div className="bg-[#0a130f] rounded-2xl p-6 sm:p-8 border border-[#0c4511] shadow-2xl shadow-[#00FFA5]/10 max-w-5xl w-full max-h-[90vh] overflow-y-auto relative animate-scale-in">
             <button
               onClick={() => setSelectedAssignmentForSubmissions(null)}
-              className="absolute top-4 right-4 p-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600"
+              className="absolute top-4 right-4 p-2 rounded-full bg-[#1a2e20] hover:bg-[#1f2d23] text-gray-400 hover:text-white transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">
+            <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-cyan-400 mb-4">
               {userRole === "faculty"
                 ? "Submissions for:"
                 : "Assignment Details:"}{" "}
-              <span className="text-blue-700">
+              <span className="text-white">
                 {selectedAssignmentForSubmissions.title}
               </span>
             </h2>
-            <div className="mb-4 text-gray-700 border-b pb-4">
-              <p>
-                <span className="font-semibold">Due Date:</span>{" "}
+            <div className="mb-6 text-gray-400 border-b border-[#0c4511] pb-4">
+              <p className="text-lg">
+                <span className="font-semibold text-gray-300">Due Date:</span>{" "}
                 {formatDate(selectedAssignmentForSubmissions.dueDate)}
               </p>
               {selectedAssignmentForSubmissions.description && (
-                <p className="text-gray-600 text-sm mt-1">
-                  <span className="font-semibold">Description:</span>{" "}
+                <p className="text-gray-400 text-sm mt-2">
+                  <span className="font-semibold text-gray-300">
+                    Description:
+                  </span>{" "}
                   {selectedAssignmentForSubmissions.description}
                 </p>
               )}
             </div>
 
             {loadingSubmissions ? (
-              <div className="text-center py-8">
-                <Loader2 className="animate-spin h-8 w-8 text-blue-600 mx-auto mb-3" />
-                <p className="text-gray-600">Loading data...</p>
+              <div className="text-center py-8 bg-[#1a2e20] rounded-lg border border-[#0c4511] shadow-md">
+                <Loader2 className="animate-spin h-10 w-10 text-[#00FFA5] mx-auto mb-3 filter drop-shadow-[0_0_8px_rgba(0,255,165,0.4)]" />
+                <p className="text-gray-400">Loading submission data...</p>
               </div>
             ) : (
               <>
                 {userRole === "faculty" && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-4">
                     {/* Submitted List for Faculty */}
                     <div>
-                      <h3 className="text-xl font-semibold text-gray-800 mb-3 flex items-center">
-                        <ClipboardCheck className="w-5 h-5 mr-2 text-green-600" />
+                      <h3 className="text-2xl font-semibold text-white mb-4 flex items-center">
+                        <CheckCircle className="w-6 h-6 mr-3 text-green-400" />
                         Submitted ({facultySubmissionsList.length})
                       </h3>
                       {facultySubmissionsList.length > 0 ? (
-                        <ul className="space-y-3">
+                        <ul className="space-y-4">
                           {facultySubmissionsList.map((submission) => (
                             <li
                               key={submission._id}
-                              className="bg-gray-100 p-3 rounded-md border border-gray-200 flex items-center justify-between"
+                              className="bg-[#1a2e20] p-4 rounded-lg border border-[#0c4511] shadow-md flex items-center justify-between"
                             >
-                              <div>
-                                {/* Assuming student is populated in the submission object */}
-                                <p className="font-semibold text-gray-900">
+                              <div className="flex-grow min-w-0">
+                                <p className="font-semibold text-white flex items-center">
+                                  <UserRound className="w-4 h-4 mr-2 text-blue-400" />
                                   {submission.student?.name ||
                                     "Unknown Student"}
                                 </p>
-                                <p className="text-sm text-gray-600">
+                                <p className="text-sm text-gray-400">
+                                  ID: {submission.student?.studentId || "N/A"}
+                                </p>
+                                <p className="text-sm text-gray-400 mt-1">
                                   File:{" "}
                                   <a
                                     href={submission.fileUrl}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="text-blue-600 hover:underline"
+                                    className="text-[#00FFA5] hover:text-cyan-400 hover:underline"
                                   >
                                     {submission.fileName}
                                   </a>
                                 </p>
                                 {submission.comments && (
-                                  <p className="text-xs text-gray-500 italic">
+                                  <p className="text-xs text-gray-500 italic mt-1">
                                     "{submission.comments}"
                                   </p>
                                 )}
-                                <p className="text-xs text-gray-500">
+                                <p className="text-xs text-gray-500 mt-1">
                                   Submitted:{" "}
                                   {formatDate(submission.submittedAt)}
                                 </p>
-                                {submission.marks !== undefined && (
-                                  <p className="text-sm text-green-700 font-medium">
-                                    Marks: {submission.marks}
-                                  </p>
-                                )}
-                                {submission.feedback && (
-                                  <p className="text-sm text-purple-700">
-                                    Feedback: {submission.feedback}
-                                  </p>
+                                {(submission.marks !== undefined ||
+                                  submission.feedback) && (
+                                  <div className="mt-2 pt-2 border-t border-[#0c4511]">
+                                    {submission.marks !== undefined && (
+                                      <p className="text-sm text-green-400 font-medium">
+                                        Marks: {submission.marks}
+                                      </p>
+                                    )}
+                                    {submission.feedback && (
+                                      <p className="text-sm text-purple-400">
+                                        Feedback: {submission.feedback}
+                                      </p>
+                                    )}
+                                  </div>
                                 )}
                               </div>
                               <a
                                 href={submission.fileUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="ml-4 p-2 rounded-full text-blue-600 hover:bg-blue-100 flex-shrink-0"
+                                className="ml-4 p-2 rounded-full text-blue-400 hover:bg-[#1f2d23] flex-shrink-0 shadow-md"
                                 title="Download Submission"
                               >
                                 <Download className="w-5 h-5" />
@@ -1454,31 +1361,32 @@ const CourseDetailsPage = () => {
 
                     {/* Not Submitted List for Faculty */}
                     <div>
-                      <h3 className="text-xl font-semibold text-gray-800 mb-3 flex items-center">
-                        <X className="w-5 h-5 mr-2 text-red-600" />
+                      <h3 className="text-2xl font-semibold text-white mb-4 flex items-center">
+                        <AlertCircle className="w-6 h-6 mr-3 text-red-400" />
                         Not Submitted ({notSubmittedStudents.length})
                       </h3>
                       {notSubmittedStudents.length > 0 ? (
-                        <ul className="space-y-3">
+                        <ul className="space-y-4">
                           {notSubmittedStudents.map((student) => (
                             <li
                               key={student._id}
-                              className="bg-red-50 p-3 rounded-md border border-red-200 flex items-center justify-between"
+                              className="bg-[#1a2e20] p-4 rounded-lg border border-[#0c4511] shadow-md flex items-center justify-between"
                             >
                               <div>
-                                <p className="font-semibold text-red-800">
+                                <p className="font-semibold text-red-400 flex items-center">
+                                  <UserRound className="w-4 h-4 mr-2 text-red-400" />
                                   {student.name}
                                 </p>
-                                <p className="text-sm text-red-600">
-                                  Student ID: {student.studentId}
+                                <p className="text-sm text-gray-400">
+                                  ID: {student.studentId}
                                 </p>
-                                <p className="text-xs text-red-500">
+                                <p className="text-xs text-gray-500">
                                   Email: {student.email}
                                 </p>
                               </div>
                               <a
                                 href={`mailto:${student.email}`}
-                                className="ml-4 p-2 rounded-full text-red-600 hover:bg-red-100 flex-shrink-0"
+                                className="ml-4 p-2 rounded-full text-blue-400 hover:bg-[#1f2d23] flex-shrink-0 shadow-md"
                                 title={`Email ${student.name}`}
                               >
                                 <Mail className="w-5 h-5" />
@@ -1495,21 +1403,25 @@ const CourseDetailsPage = () => {
                   </div>
                 )}
 
+                {/* Student View of Assignment Details (No submission form here) */}
                 {userRole === "student" && (
                   <>
-                    <h3 className="text-xl font-semibold text-gray-800 mb-3">
-                      Assignment Details
+                    <h3 className="text-2xl font-semibold text-white mb-3">
+                      Assignment Submission Status
                     </h3>
-                    <div className="bg-gray-100 p-4 rounded-lg border border-gray-200 shadow-sm">
-                      <p className="text-gray-700">
+                    <div className="bg-[#1a2e20] p-6 rounded-lg border border-[#0c4511] shadow-md">
+                      <p className="text-gray-400">
                         This section shows the details of the assignment. As a
-                        student, you would typically submit your assignment
-                        through a separate portal or mechanism.
+                        student, you would submit your assignment through a
+                        separate, designated portal or mechanism based on your
+                        institute's guidelines.
                       </p>
-                      <p className="text-gray-700 mt-2">
-                        Please refer to your course instructor for submission
-                        instructions.
+                      <p className="text-gray-400 mt-3">
+                        Please refer to your course instructor for specific
+                        submission instructions and where to upload your work.
                       </p>
+                      {/* You might add a link/button here if there's a *general* submission portal */}
+                      {/* <button className="mt-4 bg-[#00FFA5] text-black px-4 py-2 rounded-md font-medium">Go to Submission Portal</button> */}
                     </div>
                   </>
                 )}
@@ -1518,6 +1430,53 @@ const CourseDetailsPage = () => {
           </div>
         </div>
       )}
+
+      {/* Global CSS for animations and custom selects - Put this in your main CSS file (e.g., index.css) */}
+      <style>{`
+        /* General Animations */
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes scale-in {
+          from {
+            opacity: 0;
+            transform: scale(0.95);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+        .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
+        .animate-scale-in { animation: scale-in 0.3s ease-out forwards; }
+
+        /* Gradient Text Animation */
+        @keyframes gradient-shift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .animate-gradient-shift {
+            background-size: 200% auto;
+            animation: gradient-shift 5s ease-in-out infinite;
+        }
+
+        /* Custom Select Arrow Styling (for dark theme) */
+        select.appearance-none {
+          -webkit-appearance: none;
+          -moz-appearance: none;
+          appearance: none;
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='%239CA3AF' class='w-6 h-6'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M8.25 4.5l7.5 7.5-7.5 7.5' /%3E%3C/svg%3E"); /* Light gray arrow for dark bg */
+          background-repeat: no-repeat;
+          background-position: right 1rem center;
+          background-size: 1.25rem 1.25rem;
+        }
+        /* Specific drop shadow for glow */
+        .filter.drop-shadow-\[0_0_8px_rgba\(0,255,165,0.4\)\] {
+          filter: drop-shadow(0 0 8px rgba(0,255,165,0.4));
+        }
+      `}</style>
     </div>
   );
 };
