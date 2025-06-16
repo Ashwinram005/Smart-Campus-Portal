@@ -31,7 +31,7 @@ import { twMerge } from "tailwind-merge"; // Import twMerge
  * @property {string} updatedAt - Timestamp of last update
  */
 
-const EventManagement = () => {
+const EventManagementFaculty = () => {
   const [announcements, setAnnouncements] = useState([]);
   const [filter, setFilter] = useState("all");
   const [showMyAnnouncements, setShowMyAnnouncements] = useState(false);
@@ -78,7 +78,7 @@ const EventManagement = () => {
     try {
       const endpoint = showMyAnnouncements
         ? `${API_BASE_URL}/announcements/my` // Fetch only my announcements
-        : `${API_BASE_URL}/announcements`; // Fetch all announcements
+        : `${API_BASE_URL}/announcements/feed`; // Fetch all announcements
 
       const response = await fetch(endpoint, {
         method: "GET",
@@ -504,8 +504,7 @@ const EventManagement = () => {
                 >
                   {/* Edit/Delete Buttons for authorized users */}
                   {(userRole === "admin" ||
-                    (userRole === "faculty" &&
-                      announcement.createdBy === userId)) && (
+                    (userRole === "faculty" )) && (
                     <div className="absolute top-4 right-4 flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                       <button
                         onClick={() => handleEditClick(announcement)}
@@ -811,4 +810,4 @@ const EventManagement = () => {
   );
 };
 
-export default EventManagement;
+export default EventManagementFaculty;

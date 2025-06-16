@@ -96,7 +96,7 @@ const UserManagement = ({ users: initialUsers, onUserUpdate }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]); // Re-
   // run when 'token' changes, but fetchUsers is also a dep.
-  console.log("hello")
+
   const fetchUsers = useCallback(async () => {
     try {
       const response = await fetch(`http://localhost:5000/api/users`, {
