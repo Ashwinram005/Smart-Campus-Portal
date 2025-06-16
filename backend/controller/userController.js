@@ -13,6 +13,37 @@ exports.getAllUsers = async (req, res) => {
       .json({ message: "Error fetching users", error: err.message });
   }
 };
+
+// GET /api/users/:id
+exports.getUserDetails = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const loggedInUser = req.user;
+
+    // If not admin, only allow access to their own ID
+    const targetUser = await User.findById(id).select("-password");
+    if (!targetUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const isSameUser =
+      loggedInUser._id.toString() === targetUser._id.toString();
+    const isAdmin = loggedInUser.role === "admin";
+    const isFacultyViewingStudent =
+      loggedInUser.role === "faculty" && targetUser.role === "student";
+
+    if (!isSameUser && !isAdmin && !isFacultyViewingStudent) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    res.status(200).json({ user: targetUser });
+  } catch (err) {
+    res
+      .status(500)
+      .json({ message: "Error fetching user", error: err.message });
+  }
+};
+
 exports.downloadUsersCSV = async (req, res) => {
   try {
     // Fetch users
